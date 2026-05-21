@@ -14,4 +14,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: TB-Browser-Portable
-          path: src-tauri/target/release/tb-browser.exe
+          path: src-tauri/target/release/*.exe
