@@ -5,20 +5,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          # Removed 'cache: npm' to fix "Dependencies lock file is not found"
-
+        with: { node-version: '20' }
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-
+        with: { targets: x86_64-pc-windows-msvc }
       - run: npm install
       - run: npm run tauri build
-
       - uses: actions/upload-artifact@v4
         with:
-          name: TB-Browser
-          path: src-tauri/target/release/*.exe
+          name: TB-Browser-Portable
+          path: src-tauri/target/release/tb-browser.exe
