@@ -1,19 +1,21 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::{Manager, WebviewWindow};
+use url::Url; // ✅ Add this import
 
-// ✅ Verified command: accepts WebviewWindow parameter [[2]]
 #[tauri::command]
 async fn navigate(webview: WebviewWindow, url: String) -> Result<(), String> {
-    // Get or create browser window
+    // ✅ Parse String to url::Url
+    let parsed_url = Url::parse(&url).map_err(|e| e.to_string())?;
+    
     if let Some(browser) = webview.app_handle().get_webview_window("browser") {
-        browser.navigate(&url).map_err(|e| e.to_string())?;
+        // ✅ Pass Url type, not &String
+        browser.navigate(parsed_url).map_err(|e| e.to_string())?;
     } else {
-        // ✅ Verified API: WebviewWindowBuilder::new [[1]]
         tauri::WebviewWindowBuilder::new(
             webview.app_handle(),
-            "browser",  // unique label
-            tauri::WebviewUrl::External(url.parse().map_err(|e| e.to_string())?),
+            "browser",
+            tauri::WebviewUrl::External(parsed_url), // ✅ Use parsed Url
         )
         .title("TB Browser")
         .inner_size(900.0, 600.0)
@@ -25,8 +27,7 @@ async fn navigate(webview: WebviewWindow, url: String) -> Result<(), String> {
 
 fn main() {
     tauri::Builder::default()
-        // ✅ Verified: generate_handler! macro [[2]]
         .invoke_handler(tauri::generate_handler![navigate])
-        .run(tauri::generate_context!())
+        .run(tauri::generate_context!()) // ✅ Now OUT_DIR is set by build.rs
         .expect("error");
 }
