@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TB</title>
+  <style>
+    body{margin:0;background:#202124;color:#fff;font-family:system-ui;display:flex;flex-direction:column;height:100vh}
+    .nav{display:flex;gap:8px;padding:10px;background:#292a2d}
+    #url{flex:1;padding:8px 12px;border-radius:18px;border:none;background:#303134;color:#fff;outline:none}
+    button{padding:8px 14px;background:#35363a;border:none;color:#fff;border-radius:18px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <input id="url" placeholder="Enter URL" onkeydown="if(event.key==='Enter')go()">
+    <button onclick="go()">Go</button>
+  </div>
+  <script>
+    const { invoke } = window.__TAURI__.core;
+    async function go() {
+      let u = document.getElementById('url').value;
+      if(!u.startsWith('http')) u = 'https://'+u;
+      await invoke('navigate', { url: u });
+    }
+  </script>
+</body>
+</html>
