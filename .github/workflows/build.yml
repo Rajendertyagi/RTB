@@ -1,0 +1,29 @@
+name: Photino Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build & Publish (Single File, Trimmed)
+        run: dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:PublishTrimmed=true /p:TrimMode=partial -o ./publish
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TB-Browser-Photino
+          path: publish/TB-Browser.exe
