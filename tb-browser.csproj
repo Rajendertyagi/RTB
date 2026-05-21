@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Let NuGet resolve latest v3 -->
-    <PackageReference Include="Photino.NET" Version="3.*" />
+    <!-- Latest stable v4 -->
+    <PackageReference Include="Photino.NET" Version="4.0.16" />
   </ItemGroup>
 
   <ItemGroup>
