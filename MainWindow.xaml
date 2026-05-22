@@ -10,7 +10,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Compact Tab Bar -->
+        <!-- Tab Bar -->
         <Grid Grid.Row="0" Background="#2d2d2d">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -22,14 +22,7 @@
                               TabCloseRequested="TabView_TabCloseRequested"
                               Background="Transparent"
                               BorderThickness="0"
-                              Padding="0,0,0,0"
-                              TabWidth="180"
-                              IsAddTabButtonVisible="True">
-                <controls:TabView.TabStripHeader>
-                    <Grid Height="32" Margin="8,0,0,0">
-                        <TextBlock Text="TB Browser" VerticalAlignment="Center" FontSize="12" Foreground="#b0b0b0"/>
-                    </Grid>
-                </controls:TabView.TabStripHeader>
+                              Padding="0,0,0,0">
             </controls:TabView>
             
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
@@ -39,7 +32,7 @@
             </StackPanel>
         </Grid>
 
-        <!-- Integrated Address Bar -->
+        <!-- Address Bar -->
         <Grid Grid.Row="1" Background="#2d2d2d" Padding="8,6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -47,14 +40,12 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Navigation Buttons -->
             <StackPanel Grid.Column="0" Orientation="Horizontal">
                 <Button x:Name="BackBtn" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="BackBtn_Click" Foreground="#b0b0b0" Margin="0,0,4,0"/>
                 <Button x:Name="FwdBtn" Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="FwdBtn_Click" Foreground="#b0b0b0" Margin="0,0,4,0"/>
                 <Button x:Name="RefBtn" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="RefBtn_Click" Foreground="#b0b0b0"/>
             </StackPanel>
 
-            <!-- URL Bar with Bookmark -->
             <Grid Grid.Column="1" Background="#3d3d3d" CornerRadius="16" Padding="12,6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -69,11 +60,9 @@
                 <Button Grid.Column="1" Content="&#xE734;" FontFamily="Segoe MDL2 Assets" 
                         Background="Transparent" BorderThickness="0" 
                         Foreground="#b0b0b0" Width="28" Height="28"
-                        ToolTipService.ToolTip="Bookmark this page"
                         Click="BookmarkBtn_Click"/>
             </Grid>
 
-            <!-- Menu Button -->
             <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets" 
                     Width="36" Height="32" Background="Transparent" BorderThickness="0" 
                     Foreground="#b0b0b0" Margin="4,0,0,0"/>
