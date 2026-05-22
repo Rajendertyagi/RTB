@@ -13,10 +13,6 @@ public partial class MainWindow : Window
         TabBarHost.Content = tabBar;
         AddressBarHost.Content = addressBar;
         BrowserHost.Content = browserView;
-
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.New, (_, _) => tabBar.CreateNewTab()));
-        CommandBindings.Add(new CommandBinding(ApplicationCommands.Close, (_, _) => tabBar.CloseActive()));
-        CommandBindings.Add(new CommandBinding(NavigationCommands.Refresh, (_, _) => browserView.Reload()));
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
