@@ -1,0 +1,36 @@
+<UserControl x:Class="TB_Browser.UI.Controls.AddressBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource FluentBackgroundBrush}">
+    <Grid Margin="8,4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Grid.Column="0" x:Name="BackBtn" Content="←" Style="{StaticResource FluentButton}"
+                Click="Back_Click" IsEnabled="False" ToolTip="Back"/>
+        <Button Grid.Column="1" x:Name="FwdBtn" Content="→" Style="{StaticResource FluentButton}"
+                Click="Forward_Click" IsEnabled="False" ToolTip="Forward"/>
+        <Button Grid.Column="2" x:Name="ReloadBtn" Content="⟳" Style="{StaticResource FluentButton}"
+                Click="Reload_Click" ToolTip="Reload"/>
+
+        <Border Grid.Column="3" Background="{StaticResource FluentSurfaceBrush}" CornerRadius="16"
+                Padding="12,6" Margin="8,0">
+            <TextBox x:Name="UrlBox" Background="Transparent" Foreground="{StaticResource FluentTextBrush}"
+                     BorderThickness="0" VerticalAlignment="Center" KeyDown="Url_KeyDown" FontSize="13"/>
+        </Border>
+
+        <Button Grid.Column="4" Content="Go" Background="{StaticResource FluentAccentBrush}"
+                Foreground="#000" BorderThickness="0" Padding="16,6" Margin="8,0,0,0"
+                Click="Go_Click" FontWeight="SemiBold">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="16" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+    </Grid>
+</UserControl>
