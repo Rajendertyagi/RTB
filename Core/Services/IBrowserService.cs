@@ -1,6 +1,6 @@
 using System;
+using System.Windows.Media;
 using Microsoft.Web.WebView2.Core;
-using TB_Browser.Core.Logging;
 
 namespace TB_Browser.Core.Services
 {
@@ -12,6 +12,11 @@ namespace TB_Browser.Core.Services
         void GoBack();
         void GoForward();
         void Reload();
+        void SetZoom(double factor);
         event EventHandler<string> UrlChanged;
+        event EventHandler<bool> IsLoadingChanged;
+        event EventHandler<bool> CanGoBackChanged;
+        event EventHandler<bool> CanGoForwardChanged;
+        event EventHandler<ImageSource?> FaviconChanged;
     }
 }
