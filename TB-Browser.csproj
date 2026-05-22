@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- ✅ Explicitly set valid namespace (underscores, not hyphens) -->
+    <RootNamespace>TB_Browser</RootNamespace>
+    <AssemblyName>TB-Browser</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
