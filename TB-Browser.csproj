@@ -7,9 +7,14 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    
+    <!-- ✅ Required for WinUI 3 single-file .pri generation -->
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- ✅ Ensures NO MSIX package is created -->
+    <WindowsPackageType>None</WindowsPackageType>
+    
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
-    <WindowsPackageType>None</WindowsPackageType>
     <UseWinUI>true</UseWinUI>
     <Nullable>enable</Nullable>
   </PropertyGroup>
