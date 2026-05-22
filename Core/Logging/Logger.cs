@@ -9,28 +9,23 @@ namespace TB_Browser.Core.Logging
         private static readonly string _path;
         private static readonly object _lock = new();
 
-        // Static constructor runs once on first access
         static Logger()
         {
             try
             {
-                // 1. Use a safe, writable folder (Local App Data)
-                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string logDir = Path.Combine(appData, "TB-Browser", "logs");
-                
-                // 2. Ensure folder exists
+                // ✅ Use path next to executable
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string logDir = Path.Combine(baseDir, "logs");
                 Directory.CreateDirectory(logDir);
-                
-                // 3. Set final log file path
                 _path = Path.Combine(logDir, "app.log");
                 
-                Console.WriteLine($"Logger initialized at: {_path}");
+                Console.WriteLine($"Logger initialized: {_path}");
             }
             catch (Exception ex)
             {
-                // Fallback in case of permission issues
-                _path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app.log");
-                Console.WriteLine($"Logger fallback path: {_path}. Error: {ex.Message}");
+                // Fallback to temp folder
+                _path = Path.Combine(Path.GetTempPath(), "tb-browser.log");
+                Console.WriteLine($"Logger fallback: {_path}. Error: {ex.Message}");
             }
         }
 
@@ -41,18 +36,24 @@ namespace TB_Browser.Core.Logging
 
         private static void Write(string lvl, string src, string msg)
         {
-            var line = $"[{DateTime.Now:HH:mm:ss.fff}] [{lvl}] [{src}] {msg}";
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            var line = $"[{timestamp}] [{lvl}] [{src}] {msg}";
             
             lock (_lock)
             {
                 try
                 {
                     File.AppendAllText(_path, line + Environment.NewLine, Encoding.UTF8);
+                    // Force flush to disk immediately
+                    using (var fs = new FileStream(_path, FileMode.Append, FileAccess.Write, FileShare.Read))
+                    using (var sw = new StreamWriter(fs))
+                    {
+                        sw.AutoFlush = true;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // If writing to file fails, print to console (Debug mode) or silent ignore (Release)
-                    System.Diagnostics.Debug.WriteLine($"Log Write Failed: {ex.Message}");
+                    Console.WriteLine($"LOG FAILED: {ex.Message}");
                 }
             }
         }
