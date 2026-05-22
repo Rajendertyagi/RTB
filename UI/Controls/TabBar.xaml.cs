@@ -14,7 +14,6 @@ namespace TB_Browser.UI.Controls
             _svc.TabAdded += (_, t) => AddTabUI(t);
             _svc.TabRemoved += (_, t) => RemoveTabUI(t.Id);
         }
-
         private void AddTabUI(TabModel t)
         {
             var btn = new Button { Content = t.Title, Style = (Style)FindResource("TabBtn") };
@@ -22,18 +21,16 @@ namespace TB_Browser.UI.Controls
             btn.Tag = t.Id;
             TabsPanel.Children.Add(btn);
         }
-
         private void RemoveTabUI(int id)
         {
             foreach (Button b in TabsPanel.Children)
                 if (b.Tag is int tid && tid == id) { TabsPanel.Children.Remove(b); break; }
         }
-
         private void Minimize_Click(object s, RoutedEventArgs e) => Window.GetWindow(this).WindowState = WindowState.Minimized;
-        private void Maximize_Click(object s, RoutedEventArgs e) 
-        { 
+        private void Maximize_Click(object s, RoutedEventArgs e)
+        {
             var w = Window.GetWindow(this);
-            w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; 
+            w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
         private void Close_Click(object s, RoutedEventArgs e) => Application.Current.Shutdown();
     }
