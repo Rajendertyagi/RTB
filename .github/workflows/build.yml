@@ -4,13 +4,16 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # ✅ Opt into Node.js 24 now
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with: { dotnet-version: '8.0.x' }
       - run: dotnet restore
       - run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish
+      
+      # Upload logs if they exist (for debugging CI issues)
+      - run: mkdir -p publish/logs || true
       - uses: actions/upload-artifact@v7
         with:
           name: TB-Browser-WPF
