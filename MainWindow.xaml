@@ -7,7 +7,12 @@
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
     
     <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="5" CaptionHeight="40" GlassFrameThickness="-1" UseAeroCaptionButtons="False"/>
+        <WindowChrome 
+            ResizeBorderThickness="8" 
+            CaptionHeight="40" 
+            GlassFrameThickness="-1" 
+            UseAeroCaptionButtons="False"
+            CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
     <Window.InputBindings>
