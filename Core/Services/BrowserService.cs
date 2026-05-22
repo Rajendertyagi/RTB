@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Media;
 using Microsoft.Web.WebView2.Core;
 using TB_Browser.Core.Logging;
 
@@ -51,6 +52,5 @@ namespace TB_Browser.Core.Services
         public void GoForward() => _webView?.GoForward();
         public void Reload() => _webView?.Reload();
         public void SetZoom(double factor) { if (_webView != null) _webView.ZoomFactor = factor; }
-        public void BlockAds() { /* Existing logic */ }
     }
 }
