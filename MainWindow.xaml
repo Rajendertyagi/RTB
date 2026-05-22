@@ -1,20 +1,40 @@
-<Window x:Class="TB_Browser.MainWindow"
+<Window x:Class="MinimalBrowser.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="TB Browser" Width="1024" Height="768"
-        WindowStyle="None" ResizeMode="CanResize"
-        Background="{StaticResource BgBrush}"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+        xmlns:media="using:Microsoft.UI.Xaml.Media"
+        Title="Minimal Browser"
+        ExtendsContentIntoTitleBar="True"
+        SystemBackdrop="{StaticResource MicaBackdrop}">
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/> <!-- Tab Bar -->
-            <RowDefinition Height="40"/> <!-- Address Bar -->
-            <RowDefinition Height="*"/>  <!-- Browser -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <ContentControl x:Name="TabBarHost" Grid.Row="0"/>
-        <ContentControl x:Name="AddressBarHost" Grid.Row="1"/>
-        <ContentControl x:Name="BrowserHost" Grid.Row="2"/>
+        <!-- Tabs -->
+        <controls:TabView x:Name="TabView" Grid.Row="0"
+                          AddTabButtonClick="TabView_AddTabButtonClick"
+                          TabCloseRequested="TabView_TabCloseRequested"
+                          Background="Transparent" BorderThickness="0">
+            <controls:TabView.TabStripHeader>
+                <Grid x:Name="AppTitleBar" Height="40" Margin="12,0,0,0">
+                    <TextBlock Text="Minimal Browser" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                </Grid>
+            </controls:TabView.TabStripHeader>
+        </controls:TabView>
+
+        <!-- Address Bar -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Button x:Name="BackBtn" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" Click="BackBtn_Click" Style="{StaticResource NavigationBackButtonNormalStyle}"/>
+            <Button x:Name="FwdBtn" Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" Click="FwdBtn_Click" Style="{StaticResource NavigationBackButtonNormalStyle}"/>
+            <TextBox x:Name="UrlBox" Margin="12,0" Width="400" KeyDown="UrlBox_KeyDown" CornerRadius="16" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+            <Button Content="Go" Click="GoBtn_Click" Style="{StaticResource AccentButtonStyle}" CornerRadius="16"/>
+        </StackPanel>
+
+        <!-- WebView -->
+        <controls:WebView2 x:Name="WebView" Grid.Row="2"/>
     </Grid>
 </Window>
