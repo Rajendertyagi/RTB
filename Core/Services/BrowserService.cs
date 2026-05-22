@@ -67,6 +67,5 @@ namespace TB_Browser.Core.Services
         public void GoBack() => _webView?.GoBack();
         public void GoForward() => _webView?.GoForward();
         public void Reload() => _webView?.Reload();
-        public void SetZoom(double factor) { if (_webView != null) _webView.ZoomFactor = Math.Max(0.25, Math.Min(5.0, factor)); }
     }
 }
