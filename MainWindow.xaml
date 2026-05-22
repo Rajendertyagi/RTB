@@ -4,34 +4,29 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="TB Browser" Width="960" Height="640"
         WindowStyle="None" ResizeMode="CanResize" AllowsTransparency="False"
-        Background="{DynamicResource ChromeNavBg}"
+        Background="{StaticResource FluentBackgroundBrush}"
         MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="12" CaptionHeight="36"
+        <WindowChrome ResizeBorderThickness="12" CaptionHeight="32"
                       GlassFrameThickness="-1" UseAeroCaptionButtons="False" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
     <Window.InputBindings>
-        <KeyBinding Key="T" Modifiers="Ctrl" Command="ApplicationCommands.New"/>
-        <KeyBinding Key="W" Modifiers="Ctrl" Command="ApplicationCommands.Close"/>
-        <KeyBinding Key="L" Modifiers="Ctrl" Command="ApplicationCommands.Properties"/>
-        <KeyBinding Key="F5" Command="NavigationCommands.Refresh"/>
-        <KeyBinding Key="Left" Modifiers="Alt" Command="NavigationCommands.BrowseBack"/>
-        <KeyBinding Key="Right" Modifiers="Alt" Command="NavigationCommands.BrowseForward"/>
+        <KeyBinding Key="T" Modifiers="Ctrl" Command="New"/>
+        <KeyBinding Key="W" Modifiers="Ctrl" Command="Close"/>
+        <KeyBinding Key="F5" Command="Refresh"/>
     </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="36"/><RowDefinition Height="42"/>
-            <RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="32"/> <!-- Tab Bar -->
+            <RowDefinition Height="40"/> <!-- Address Bar -->
+            <RowDefinition Height="*"/>  <!-- Browser -->
         </Grid.RowDefinitions>
+
         <ContentControl x:Name="TabBarHost" Grid.Row="0"/>
         <ContentControl x:Name="AddressBarHost" Grid.Row="1"/>
         <ContentControl x:Name="BrowserHost" Grid.Row="2"/>
-        <ProgressBar x:Name="LoadProgress" Grid.Row="2" Height="2" VerticalAlignment="Top"
-                     Background="Transparent" Foreground="{DynamicResource ChromeAccent}" Visibility="Collapsed"/>
-        <TextBlock x:Name="StatusText" Grid.Row="3" Margin="8,0" Foreground="{DynamicResource ChromeDisabled}"
-                   FontSize="11" Height="20" VerticalAlignment="Center"/>
     </Grid>
 </Window>
