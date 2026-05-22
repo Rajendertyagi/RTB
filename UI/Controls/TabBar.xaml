@@ -1,0 +1,39 @@
+<UserControl x:Class="TB_Browser.UI.Controls.TabBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+             Background="{StaticResource FluentBackgroundBrush}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Tabs + New Tab -->
+        <Grid Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden">
+                <StackPanel x:Name="TabsPanel" Orientation="Horizontal" Margin="8,0,0,0"/>
+            </ScrollViewer>
+            <Button Grid.Column="1" Content="+" Width="32" Height="32" Style="{StaticResource FluentButton}"
+                    Margin="4,0,8,0" Click="NewTab_Click" ToolTip="New tab (Ctrl+T)"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+        </Grid>
+
+        <!-- Window Controls -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
+            <Button Content="─" Width="40" Height="32" Style="{StaticResource FluentButton}"
+                    Click="Minimize_Click" ToolTip="Minimize"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+            <Button Content="□" Width="40" Height="32" Style="{StaticResource FluentButton}"
+                    Click="Maximize_Click" ToolTip="Maximize"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+            <Button Content="✕" Width="40" Height="32" Style="{StaticResource FluentButton}"
+                    Click="Close_Click" ToolTip="Close"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
