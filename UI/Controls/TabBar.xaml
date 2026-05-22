@@ -7,10 +7,38 @@
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         
-        <!-- Tabs (scrollable) -->
-        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
-            <StackPanel x:Name="TabsPanel" Orientation="Horizontal" Margin="8,4,0,4"/>
-        </ScrollViewer>
+        <!-- Tabs + New Tab Button -->
+        <Grid Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Scrollable Tabs -->
+            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+                <StackPanel x:Name="TabsPanel" Orientation="Horizontal" Margin="8,4,0,4"/>
+            </ScrollViewer>
+            
+            <!-- New Tab Button (+) -->
+            <Button Grid.Column="1" Content="+" Width="32" Height="32" 
+                    Background="Transparent" Foreground="#9aa0a6" 
+                    BorderThickness="0" FontSize="18" FontWeight="Bold"
+                    Margin="4,4,8,4" Cursor="Hand" Click="NewTab_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3c4043"/>
+                                <Setter Property="Foreground" Value="#fff"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
         
         <!-- Window Controls -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
