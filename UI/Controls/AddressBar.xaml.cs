@@ -8,7 +8,14 @@ namespace TB_Browser.UI.Controls
     public partial class AddressBar : UserControl
     {
         private readonly IBrowserService _svc;
-        public AddressBar(IBrowserService svc) { InitializeComponent(); _svc = svc; _svc.UrlChanged += (_, u) => UrlBox.Text = u; _svc.CanGoBackChanged += (_, b) => BackBtn.IsEnabled = b; _svc.CanGoForwardChanged += (_, b) => FwdBtn.IsEnabled = b; }
+        public AddressBar(IBrowserService svc)
+        {
+            InitializeComponent();
+            _svc = svc;
+            _svc.UrlChanged += (_, u) => UrlBox.Text = u;
+            _svc.CanGoBackChanged += (_, b) => BackBtn.IsEnabled = b;
+            _svc.CanGoForwardChanged += (_, b) => FwdBtn.IsEnabled = b;
+        }
         private void Back_Click(object s, RoutedEventArgs e) => _svc.GoBack();
         private void Forward_Click(object s, RoutedEventArgs e) => _svc.GoForward();
         private void Reload_Click(object s, RoutedEventArgs e) => _svc.Reload();
