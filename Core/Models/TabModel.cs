@@ -1,3 +1,4 @@
+#nullable enable
 using Microsoft.Web.WebView2.Core;
 
 namespace TB_Browser.Core.Models
