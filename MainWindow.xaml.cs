@@ -9,16 +9,22 @@ namespace TB_Browser;
 
 public sealed partial class MainWindow : Window
 {
-    private AppWindow appWindow;
-    private OverlappedPresenter presenter;
+    private AppWindow? appWindow;
+    private OverlappedPresenter? presenter;
 
     public MainWindow()
     {
         InitializeComponent();
         
-        // ✅ Modern API: Direct access to AppWindow
+        // ✅ Programmatic Title Bar Setup (Bypasses XAML compiler crash)
         appWindow = this.AppWindow;
-        presenter = appWindow.Presenter as OverlappedPresenter;
+        if (appWindow != null)
+        {
+            appWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+            appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+            appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+            presenter = appWindow.Presenter as OverlappedPresenter;
+        }
 
         TabView.TabItems.Add(new TabViewItem { Header = "New Tab" });
         TabView.SelectedIndex = 0;
@@ -71,7 +77,6 @@ public sealed partial class MainWindow : Window
         if (WebView.Source != null) UrlBox.Text = WebView.Source.AbsoluteUri;
     }
 
-    // ✅ Fixed Window Controls using OverlappedPresenter
     private void MinBtn_Click(object sender, RoutedEventArgs e) => presenter?.Minimize();
 
     private void MaxBtn_Click(object sender, RoutedEventArgs e)
