@@ -25,8 +25,8 @@ public sealed partial class MainWindow : Window
             appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
             appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
 
-            // ✅ Fix: Explicitly define draggable region so window is draggable immediately
-            appWindow.TitleBar.DraggableRects = new[] { new RectInt32(0, 0, 9999, 32) };
+            // ✅ Removed DraggableRects line to fix build error.
+            // The solid background on Row 0 Grid handles dragging automatically.
 
             presenter = appWindow.Presenter as OverlappedPresenter;
         }
