@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TB_Browser.Core.Logging;
 using TB_Browser.Core.Models;
 
 namespace TB_Browser.Core.Services
 {
     public class TabService : ITabService
     {
+        private readonly ILogger _logger;
         private readonly List<TabModel> _tabs = new();
         private int _nextId = 1;
         private TabModel? _active;
+
+        public TabService(ILogger logger) => _logger = logger;
 
         public IReadOnlyList<TabModel> Tabs => _tabs;
         public TabModel? ActiveTab => _active;
@@ -24,6 +28,7 @@ namespace TB_Browser.Core.Services
             _tabs.Add(tab);
             ActivateTab(tab.Id);
             TabAdded?.Invoke(this, tab);
+            _logger.Info("TabService", $"Tab created: #{tab.Id}");
             return tab;
         }
 
@@ -33,6 +38,7 @@ namespace TB_Browser.Core.Services
             if (tab == null) return;
             _tabs.Remove(tab);
             TabRemoved?.Invoke(this, tab);
+            _logger.Info("TabService", $"Tab closed: #{id}");
             if (_tabs.Count == 0) CreateTab();
             else if (_active?.Id == id) ActivateTab(_tabs.Last().Id);
         }
@@ -41,6 +47,7 @@ namespace TB_Browser.Core.Services
         {
             _active = _tabs.FirstOrDefault(t => t.Id == id);
             ActiveTabChanged?.Invoke(this, _active!);
+            _logger.Debug("TabService", $"Tab activated: #{id}");
         }
 
         public void UpdateTab(int id, string url, string title)
