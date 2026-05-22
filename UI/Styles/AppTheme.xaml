@@ -2,9 +2,18 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <SolidColorBrush x:Key="TabBtnBg" Color="#35363a"/>
     <SolidColorBrush x:Key="ActiveTabBg" Color="#4a4b4f"/>
+    <SolidColorBrush x:Key="NavBtnFg" Color="#9aa0a6"/>
+    <SolidColorBrush x:Key="NavBtnHoverBg" Color="#3c4043"/>
+    <SolidColorBrush x:Key="NavBtnPressedBg" Color="#2d2f32"/>
+    <SolidColorBrush x:Key="NavBtnDisabledFg" Color="#5f6368"/>
+    <SolidColorBrush x:Key="AccentBlue" Color="#1a73e8"/>
+    
     <Style x:Key="NavBtn" TargetType="{x:Type Button}">
-        <Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/>
-        <Setter Property="Background" Value="Transparent"/><Setter Property="Foreground" Value="#9aa0a6"/><Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource NavBtnFg}"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
@@ -12,17 +21,20 @@
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#3c4043"/></Trigger>
-                        <Trigger Property="IsPressed" Value="True"><Setter Property="Background" Value="#2d2f32"/></Trigger>
-                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="#5f6368"/></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{StaticResource NavBtnHoverBg}"/></Trigger>
+                        <Trigger Property="IsPressed" Value="True"><Setter Property="Background" Value="{StaticResource NavBtnPressedBg}"/></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{StaticResource NavBtnDisabledFg}"/></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
+    
     <Style x:Key="TabBtn" TargetType="{x:Type Button}">
-        <Setter Property="Padding" Value="12,6"/><Setter Property="Background" Value="{StaticResource TabBtnBg}"/>
-        <Setter Property="Foreground" Value="#e8eaed"/><Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Background" Value="{StaticResource TabBtnBg}"/>
+        <Setter Property="Foreground" Value="#e8eaed"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
