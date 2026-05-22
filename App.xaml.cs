@@ -18,18 +18,14 @@ namespace TB_Browser
                 var browserSvc = new BrowserService();
                 browserSvc.TabService = tabSvc;
 
+                // ✅ 1. Create UI & subscribe BEFORE creating tabs
                 var tabBar = new TabBar(tabSvc);
                 var addressBar = new AddressBar(browserSvc);
                 var browserView = new BrowserView(browserSvc);
-                
-                tabSvc.ActiveTabChanged += (s, tab) => 
-                {
-                    Logger.Info("App", $"Active tab changed to #{tab?.Id ?? 0}");
-                    if (tab != null) browserView.SwitchTo(tab); // ✅ Fixed warning
-                };
+                tabSvc.ActiveTabChanged += (_, tab) => { if (tab != null) browserView.SwitchTo(tab); };
 
-                Logger.Info("App", "Creating first tab");
-                tabSvc.CreateTab(); 
+                // ✅ 2. Now create first tab (UI is listening)
+                tabSvc.CreateTab();
 
                 var win = new MainWindow(tabBar, addressBar, browserView);
                 win.Show();
@@ -37,7 +33,7 @@ namespace TB_Browser
             }
             catch (Exception ex)
             {
-                Logger.Error("App", $"Startup failed: {ex.Message}");
+                Logger.Error("App", ex.Message);
                 MessageBox.Show($"Startup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Shutdown(1);
             }
