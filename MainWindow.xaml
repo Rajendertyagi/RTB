@@ -6,7 +6,7 @@
 
     <Grid Background="#202020">
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/> <!-- ✅ Fixed height for draggable region -->
+            <RowDefinition Height="32"/> <!-- Fixed height for title bar area -->
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
