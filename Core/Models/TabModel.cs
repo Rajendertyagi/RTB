@@ -1,4 +1,4 @@
-#nullable enable
+using System.Drawing;
 using Microsoft.Web.WebView2.Core;
 
 namespace TB_Browser.Core.Models
@@ -7,7 +7,8 @@ namespace TB_Browser.Core.Models
     {
         public int Id { get; init; }
         public string Title { get; set; } = "New Tab";
-        public string Url { get; set; } = "https://www.bing.com";
+        public string Url { get; set; } = "about:blank";
         public CoreWebView2? WebView { get; set; }
+        public ImageSource? Favicon { get; set; }
     }
 }
