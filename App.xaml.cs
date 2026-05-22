@@ -25,10 +25,9 @@ namespace TB_Browser
                 tabSvc.ActiveTabChanged += (s, tab) => 
                 {
                     Logger.Info("App", $"Active tab changed to #{tab?.Id ?? 0}");
-                    browserView.SwitchTo(tab);
+                    if (tab != null) browserView.SwitchTo(tab); // ✅ Fixed warning
                 };
 
-                // ✅ CREATE FIRST TAB
                 Logger.Info("App", "Creating first tab");
                 tabSvc.CreateTab(); 
 
