@@ -14,7 +14,7 @@
         <KeyBinding Key="T" Modifiers="Ctrl" Command="ApplicationCommands.New"/>
         <KeyBinding Key="W" Modifiers="Ctrl" Command="ApplicationCommands.Close"/>
         <KeyBinding Key="L" Modifiers="Ctrl" Command="ApplicationCommands.Properties"/>
-        <KeyBinding Key="F5" Command="ApplicationCommands.Refresh"/>
+        <KeyBinding Key="F5" Command="NavigationCommands.Refresh"/>
         <KeyBinding Key="Left" Modifiers="Alt" Command="NavigationCommands.BrowseBack"/>
         <KeyBinding Key="Right" Modifiers="Alt" Command="NavigationCommands.BrowseForward"/>
     </Window.InputBindings>
@@ -30,7 +30,7 @@
         <ContentControl x:Name="AddressBarHost" Grid.Row="1"/>
         <ContentControl x:Name="BrowserHost" Grid.Row="2"/>
         <ProgressBar x:Name="LoadProgress" Grid.Row="2" Height="2" VerticalAlignment="Top" 
-                     Background="Transparent" Foreground="#1a73e8" Visibility="Collapsed"/>
+                     Background="Transparent" Foreground="{StaticResource AccentBlue}" Visibility="Collapsed"/>
         <TextBlock x:Name="StatusText" Grid.Row="3" Margin="8,0" Foreground="#9aa0a6" FontSize="11" Height="20" VerticalAlignment="Center"/>
     </Grid>
 </Window>
