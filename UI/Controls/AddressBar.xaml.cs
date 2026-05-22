@@ -9,7 +9,6 @@ namespace TB_Browser.UI.Controls
     public partial class AddressBar : UserControl
     {
         private readonly IBrowserService _svc;
-        private readonly ILogger _logger = App.Logger;
 
         public AddressBar(IBrowserService svc)
         {
@@ -18,25 +17,14 @@ namespace TB_Browser.UI.Controls
             _svc.UrlChanged += (_, u) => UrlBox.Text = u;
         }
 
-        private void Back_Click(object s, RoutedEventArgs e)
-        {
-            _logger.Debug("AddressBar", "Back button clicked");
-            _svc.GoBack();
-        }
-        private void Forward_Click(object s, RoutedEventArgs e)
-        {
-            _logger.Debug("AddressBar", "Forward button clicked");
-            _svc.GoForward();
-        }
-        private void Reload_Click(object s, RoutedEventArgs e)
-        {
-            _logger.Debug("AddressBar", "Reload button clicked");
-            _svc.Reload();
-        }
+        private void Back_Click(object s, RoutedEventArgs e) { App.Logger.Debug("AddressBar", "Back"); _svc.GoBack(); }
+        private void Forward_Click(object s, RoutedEventArgs e) { App.Logger.Debug("AddressBar", "Forward"); _svc.GoForward(); }
+        private void Reload_Click(object s, RoutedEventArgs e) { App.Logger.Debug("AddressBar", "Reload"); _svc.Reload(); }
+        
         private void Go_Click(object s, RoutedEventArgs e)
         {
             var url = UrlBox.Text;
-            _logger.Info("AddressBar", $"User submitted URL: {url}");
+            App.Logger.Info("AddressBar", $"Submit: {url}");
             _svc.Navigate(url);
         }
         private void Url_KeyDown(object s, KeyEventArgs e)
@@ -44,7 +32,7 @@ namespace TB_Browser.UI.Controls
             if (e.Key == Key.Enter)
             {
                 var url = UrlBox.Text;
-                _logger.Info("AddressBar", $"User pressed Enter for: {url}");
+                App.Logger.Info("AddressBar", $"Enter: {url}");
                 _svc.Navigate(url);
             }
         }
