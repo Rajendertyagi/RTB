@@ -1,11 +1,10 @@
-<Window
-    x:Class="TB_Browser.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="TB Browser"
-    Width="900" Height="700">
+<Window x:Class="TB_Browser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TB Browser" Width="900" Height="700"
+        WindowStyle="None" AllowsTransparency="True" Background="#202124">
 
-    <Grid Background="#202124">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
             <RowDefinition Height="Auto"/>
