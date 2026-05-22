@@ -4,21 +4,21 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.Web.WebView2.Core;
 using System;
-using WinRT.Interop;
 
 namespace TB_Browser;
 
 public sealed partial class MainWindow : Window
 {
     private AppWindow appWindow;
+    private OverlappedPresenter presenter;
 
     public MainWindow()
     {
         InitializeComponent();
         
-        IntPtr handle = WindowNative.GetWindowHandle(this);
-        WindowId id = Win32Interop.GetWindowIdFromWindow(handle);
-        appWindow = AppWindow.GetFromWindowId(id);
+        // ✅ Modern API: Direct access to AppWindow
+        appWindow = this.AppWindow;
+        presenter = appWindow.Presenter as OverlappedPresenter;
 
         TabView.TabItems.Add(new TabViewItem { Header = "New Tab" });
         TabView.SelectedIndex = 0;
@@ -71,13 +71,17 @@ public sealed partial class MainWindow : Window
         if (WebView.Source != null) UrlBox.Text = WebView.Source.AbsoluteUri;
     }
 
-    private void MinBtn_Click(object sender, RoutedEventArgs e) => appWindow.Minimize();
+    // ✅ Fixed Window Controls using OverlappedPresenter
+    private void MinBtn_Click(object sender, RoutedEventArgs e) => presenter?.Minimize();
+
     private void MaxBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (appWindow.Presenter.Kind == AppWindowPresenterKind.Overlapped)
-            appWindow.SetPresenter(AppWindowPresenterKind.Maximized);
+        if (presenter == null) return;
+        if (presenter.State == OverlappedPresenterState.Maximized)
+            presenter.Restore();
         else
-            appWindow.SetPresenter(AppWindowPresenterKind.Overlapped);
+            presenter.Maximize();
     }
+
     private void CloseBtn_Click(object sender, RoutedEventArgs e) => Close();
 }
