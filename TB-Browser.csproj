@@ -1,3 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -7,15 +8,21 @@
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     
-    <!-- ✅ Framework-Dependent -->
+    <!-- Framework-Dependent -->
     <SelfContained>false</SelfContained>
     <PublishSingleFile>false</PublishSingleFile>
     
-    <!-- ✅ Still required for WinUI 3 .pri resources -->
+    <!-- WinUI Requirements -->
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
-    
     <UseWinUI>true</UseWinUI>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250213002-preview" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+</Project>
