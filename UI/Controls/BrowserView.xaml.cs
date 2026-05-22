@@ -13,7 +13,6 @@ namespace TB_Browser.UI.Controls
             InitializeComponent();
             _svc = svc;
         }
-
         public async void SwitchTo(TabModel tab)
         {
             var wv = new WebView2();
