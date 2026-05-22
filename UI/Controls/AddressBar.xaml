@@ -1,41 +1,19 @@
 <UserControl x:Class="TB_Browser.UI.Controls.AddressBar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource ChromeNavBg}">
     <Grid Margin="8,4">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" MinWidth="32"/>
-            <ColumnDefinition Width="Auto" MinWidth="32"/>
-            <ColumnDefinition Width="Auto" MinWidth="32"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto" MinWidth="60"/>
+            <ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        
-        <Button Grid.Column="0" x:Name="BackBtn" Content="←" Style="{DynamicResource NavBtn}" Click="Back_Click" Margin="0,0,2,0" IsEnabled="False" ToolTip="Back"/>
-        <Button Grid.Column="1" x:Name="FwdBtn" Content="→" Style="{DynamicResource NavBtn}" Click="Forward_Click" Margin="2,0,2,0" IsEnabled="False" ToolTip="Forward"/>
-        <Button Grid.Column="2" x:Name="ReloadBtn" Content="⟳" Style="{DynamicResource NavBtn}" Click="Reload_Click" Margin="2,0,8,0" ToolTip="Reload"/>
-        
-        <Border Grid.Column="3" Background="#303134" CornerRadius="18" Padding="12,6" Margin="0,2">
-            <TextBox x:Name="UrlBox" Background="Transparent" Foreground="#fff" BorderThickness="0" VerticalAlignment="Center" 
-                     KeyDown="Url_KeyDown" TextChanged="Url_TextChanged" FontSize="13"/>
+        <Button Grid.Column="0" x:Name="BackBtn" Content="←" Style="{StaticResource ChromeNavBtn}" Click="Back_Click" IsEnabled="False" ToolTip="Back"/>
+        <Button Grid.Column="1" x:Name="FwdBtn" Content="→" Style="{StaticResource ChromeNavBtn}" Click="Forward_Click" IsEnabled="False" ToolTip="Forward"/>
+        <Button Grid.Column="2" x:Name="ReloadBtn" Content="⟳" Style="{StaticResource ChromeNavBtn}" Click="Reload_Click" ToolTip="Reload"/>
+        <Button Grid.Column="3" Content="" Style="{StaticResource ChromeNavBtn}" Margin="4,0,0,0" ToolTip="Site info"/>
+        <Border Grid.Column="4" Background="{StaticResource ChromeAddressBg}" CornerRadius="16" Padding="10,6" Margin="8,0">
+            <TextBox x:Name="UrlBox" Background="Transparent" Foreground="{StaticResource ChromeText}" BorderThickness="0" VerticalAlignment="Center" KeyDown="Url_KeyDown" TextChanged="Url_TextChanged" FontSize="13" CaretBrush="{StaticResource ChromeAccent}"/>
         </Border>
-        
-        <Button Grid.Column="4" Content="Go" Background="{StaticResource AccentBlue}" Foreground="#fff" BorderThickness="0" 
-                Padding="20,8" Margin="8,0,0,0" Click="Go_Click" FontSize="13" FontWeight="SemiBold">
-            <Button.Template>
-                <ControlTemplate TargetType="{x:Type Button}">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="18" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#1557b0"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="#0f4a8a"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Button.Template>
-        </Button>
+        <Button Grid.Column="5" x:Name="BookmarkBtn" Content="☆" Style="{StaticResource ChromeNavBtn}" Click="Bookmark_Click" ToolTip="Bookmark this page"/>
+        <Button Grid.Column="6" Content="⋮" Style="{StaticResource ChromeNavBtn}" ToolTip="Menu"/>
     </Grid>
 </UserControl>
