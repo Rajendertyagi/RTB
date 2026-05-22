@@ -3,34 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:Microsoft.UI.Xaml.Controls"
         Title="TB Browser">
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- Tabs -->
-        <controls:TabView x:Name="TabView" Grid.Row="0"
-                          AddTabButtonClick="TabView_AddTabButtonClick"
-                          TabCloseRequested="TabView_TabCloseRequested"
-                          Background="Transparent" BorderThickness="0">
-            <controls:TabView.TabStripHeader>
-                <Grid Height="40" Margin="12,0,0,0">
-                    <TextBlock Text="TB Browser" VerticalAlignment="Center" Style="{StaticResource CaptionTextBlockStyle}"/>
-                </Grid>
-            </controls:TabView.TabStripHeader>
-        </controls:TabView>
-
-        <!-- Address Bar -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-            <Button x:Name="BackBtn" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" Click="BackBtn_Click" Style="{StaticResource NavigationBackButtonNormalStyle}"/>
-            <Button x:Name="FwdBtn" Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" Click="FwdBtn_Click" Style="{StaticResource NavigationBackButtonNormalStyle}"/>
-            <TextBox x:Name="UrlBox" Margin="12,0" Width="400" KeyDown="UrlBox_KeyDown" CornerRadius="16" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"/>
-            <Button Content="Go" Click="GoBtn_Click" Style="{StaticResource AccentButtonStyle}" CornerRadius="16"/>
-        </StackPanel>
-
-        <!-- WebView -->
-        <controls:WebView2 x:Name="WebView" Grid.Row="2"/>
+    <Grid Padding="12" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <controls:WebView2 x:Name="WebView" Source="https://www.google.com"/>
     </Grid>
 </Window>
