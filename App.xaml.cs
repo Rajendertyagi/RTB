@@ -20,7 +20,7 @@ public partial class App : Application
             var browserView = new BrowserView(browserSvc);
 
             tabSvc.ActiveTabChanged += (_, tab) => { if (tab != null) browserView.SwitchTo(tab); };
-            tabSvc.CreateTab(); // Create first tab after UI is ready
+            tabSvc.CreateTab();
 
             new MainWindow(tabBar, addressBar, browserView).Show();
         }
