@@ -17,6 +17,7 @@ public partial class AddressBar : UserControl
 
     private void Back_Click(object s, RoutedEventArgs e) => _svc.GoBack();
     private void Forward_Click(object s, RoutedEventArgs e) => _svc.GoForward();
+    private void Reload_Click(object s, RoutedEventArgs e) => _svc.Reload(); // ✅ Added
     private void Go_Click(object s, RoutedEventArgs e) => _svc.Navigate(UrlBox.Text);
     private void Url_KeyDown(object s, KeyEventArgs e) { if (e.Key == Key.Enter) _svc.Navigate(UrlBox.Text); }
 }
