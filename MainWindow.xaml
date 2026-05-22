@@ -4,52 +4,15 @@
         xmlns:controls="using:Microsoft.UI.Xaml.Controls"
         Title="TB Browser">
     
-    <!-- 1. Define Resources for TextBox Styling -->
-    <Window.Resources>
-        <Style x:Key="OmniboxTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#ffffff"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0,0,0,0"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Grid>
-                            <ScrollViewer x:Name="ContentElement" 
-                                          HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
-                                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
-                                          VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
-                                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
-                                          IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
-                                          IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}"
-                                          ZoomMode="{TemplateBinding ScrollViewer.ZoomMode}"
-                                          IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
-                                          Margin="{TemplateBinding Padding}"
-                                          IsTabStop="False"
-                                          AutomationProperties.AccessibilityView="Raw"/>
-                            <TextBlock x:Name="PlaceholderTextContentPresenter"
-                                       Foreground="#888888"
-                                       Margin="{TemplateBinding Padding}"
-                                       Text="{TemplateBinding PlaceholderText}"
-                                       VerticalAlignment="Center"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
-
-    <Grid Background="#1e1e1e">
+    <Grid Background="#202020">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <!-- Tabs -->
-            <RowDefinition Height="Auto"/> <!-- Address Bar -->
-            <RowDefinition Height="*"/>    <!-- Web View -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- 2. Tab Bar -->
-        <Grid Grid.Row="0" Background="#2d2d2d">
+        <!-- Tab Bar -->
+        <Grid Grid.Row="0" Background="#2C2C2C">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -62,55 +25,65 @@
                               BorderThickness="0"
                               Padding="0,0,0,0"/>
             
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
-                <Button x:Name="MinBtn" Content="&#xE921;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MinBtn_Click" Foreground="#b0b0b0"/>
-                <Button x:Name="MaxBtn" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MaxBtn_Click" Foreground="#b0b0b0"/>
-                <Button x:Name="CloseBtn" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="CloseBtn_Click" Foreground="#b0b0b0"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="MinBtn" Content="&#xE921;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MinBtn_Click" Foreground="#CCCCCC"/>
+                <Button x:Name="MaxBtn" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MaxBtn_Click" Foreground="#CCCCCC"/>
+                <Button x:Name="CloseBtn" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="CloseBtn_Click" Foreground="#CCCCCC"/>
             </StackPanel>
         </Grid>
 
-        <!-- 3. Address Bar (Fixed Styling) -->
-        <Grid Grid.Row="1" Background="#2d2d2d" Padding="6,6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Nav Buttons -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button x:Name="BackBtn" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="BackBtn_Click" Foreground="#b0b0b0" Margin="0,0,2,0"/>
-                <Button x:Name="FwdBtn" Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="FwdBtn_Click" Foreground="#b0b0b0" Margin="0,0,2,0"/>
-                <Button x:Name="RefBtn" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" Width="32" Height="32" Background="Transparent" BorderThickness="0" Click="RefBtn_Click" Foreground="#b0b0b0"/>
-            </StackPanel>
-
-            <!-- The "Omnibox" Pill -->
-            <Grid Grid.Column="1" Background="#1e1e1e" CornerRadius="20" Margin="4,0" Padding="12,0">
+        <!-- Address Bar (Clean & Simple) -->
+        <Border Grid.Row="1" Background="#2C2C2C" Padding="8,8">
+            <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
-                <!-- Custom Styled TextBox -->
-                <TextBox x:Name="UrlBox" 
-                         Style="{StaticResource OmniboxTextBoxStyle}"
-                         PlaceholderText="Search or enter address"
-                         KeyDown="UrlBox_KeyDown" 
-                         Width="Auto"
-                         HorizontalAlignment="Stretch"/>
-                
-                <!-- Bookmark Button -->
-                <Button Grid.Column="1" Content="&#xE734;" FontFamily="Segoe MDL2 Assets" 
-                        Background="Transparent" BorderThickness="0" 
-                        Foreground="#b0b0b0" Width="32" Height="32"
-                        Click="BookmarkBtn_Click"/>
-            </Grid>
 
-            <!-- Menu Button -->
-            <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets" 
-                    Width="32" Height="32" Background="Transparent" BorderThickness="0" 
-                    Foreground="#b0b0b0" Margin="4,0,0,0"/>
-        </Grid>
+                <!-- Navigation Buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BackBtn" Content="&#xE72B;" FontFamily="Segoe MDL2 Assets" Click="BackBtn_Click" 
+                            Background="Transparent" BorderThickness="0" Foreground="#CCCCCC" 
+                            Width="32" Height="32" Margin="0,0,4,0"/>
+                    <Button x:Name="FwdBtn" Content="&#xE72A;" FontFamily="Segoe MDL2 Assets" Click="FwdBtn_Click" 
+                            Background="Transparent" BorderThickness="0" Foreground="#CCCCCC" 
+                            Width="32" Height="32" Margin="0,0,4,0"/>
+                    <Button x:Name="RefBtn" Content="&#xE72C;" FontFamily="Segoe MDL2 Assets" Click="RefBtn_Click" 
+                            Background="Transparent" BorderThickness="0" Foreground="#CCCCCC" 
+                            Width="32" Height="32"/>
+                </StackPanel>
+
+                <!-- URL Bar with Rounded Corners -->
+                <Border Grid.Column="1" Background="#3C3C3C" CornerRadius="4" Margin="8,0" Padding="8,4">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBox x:Name="UrlBox" 
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Foreground="#FFFFFF"
+                                 PlaceholderText="Search or enter address"
+                                 FontSize="13"
+                                 VerticalAlignment="Center"
+                                 KeyDown="UrlBox_KeyDown"/>
+                        
+                        <Button Grid.Column="1" Content="&#xE734;" FontFamily="Segoe MDL2 Assets" 
+                                Background="Transparent" BorderThickness="0" 
+                                Foreground="#CCCCCC" Width="28" Height="28"
+                                Click="BookmarkBtn_Click"/>
+                    </Grid>
+                </Border>
+
+                <!-- Menu Button -->
+                <Button Grid.Column="2" Content="&#xE712;" FontFamily="Segoe MDL2 Assets" 
+                        Background="Transparent" BorderThickness="0" 
+                        Foreground="#CCCCCC" Width="32" Height="32"/>
+            </Grid>
+        </Border>
 
         <controls:WebView2 x:Name="WebView" Grid.Row="2" NavigationCompleted="WebView_NavigationCompleted"/>
     </Grid>
