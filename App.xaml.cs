@@ -1,4 +1,3 @@
-using System;
 using System.Windows;
 using TB_Browser.Core.Services;
 using TB_Browser.UI.Controls;
@@ -10,24 +9,16 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        try
-        {
-            var tabSvc = new TabService();
-            var browserSvc = new BrowserService { TabService = tabSvc };
+        var tabService = new TabService();
+        var browserService = new BrowserService { TabService = tabService };
 
-            var tabBar = new TabBar(tabSvc);
-            var addressBar = new AddressBar(browserSvc);
-            var browserView = new BrowserView(browserSvc);
+        var tabBar = new TabBar(tabService);
+        var addressBar = new AddressBar(browserService);
+        var browserView = new BrowserView(browserService);
 
-            tabSvc.ActiveTabChanged += (_, tab) => { if (tab != null) browserView.SwitchTo(tab); };
-            tabSvc.CreateTab();
+        tabService.ActiveTabChanged += (_, tab) => browserView.SwitchTo(tab);
+        tabService.CreateTab();
 
-            new MainWindow(tabBar, addressBar, browserView).Show();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Startup failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
-        }
+        new MainWindow(tabBar, addressBar, browserView).Show();
     }
 }
