@@ -18,6 +18,9 @@ namespace TB_Browser
                 var browserSvc = new BrowserService();
                 browserSvc.TabService = tabSvc;
 
+                // ✅ FIX: Create the first tab so the UI isn't empty
+                tabSvc.CreateTab(); 
+
                 var tabBar = new TabBar(tabSvc);
                 var addressBar = new AddressBar(browserSvc);
                 var browserView = new BrowserView(browserSvc);
