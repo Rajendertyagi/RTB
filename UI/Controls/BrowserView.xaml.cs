@@ -21,10 +21,10 @@ namespace TB_Browser.UI.Controls
             _svc = svc;
             MouseWheel += (_, e) =>
             {
-                if (Keyboard.Modifiers == ModifierKeys.Control)
+                if (Keyboard.Modifiers == ModifierKeys.Control && _currentWebView != null)
                 {
                     _zoom += e.Delta > 0 ? 0.1 : -0.1;
-                    _svc.SetZoom(Math.Max(0.25, Math.Min(3.0, _zoom)));
+                    _currentWebView.ZoomFactor = Math.Max(0.25, Math.Min(5.0, _zoom));
                 }
             };
         }
