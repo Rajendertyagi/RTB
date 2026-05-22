@@ -1,17 +1,15 @@
-name: Tauri Build
+name: Build TB Browser
 on: push
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - uses: dtolnay/rust-toolchain@stable
-        with: { targets: x86_64-pc-windows-msvc }
-      - run: npm install
-      - run: npm run tauri build
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '8.0.x' }
+      - run: dotnet restore
+      - run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish
       - uses: actions/upload-artifact@v4
         with:
-          name: TB-Browser-Portable
-          path: src-tauri/target/release/tb-browser.exe
+          name: TB-Browser-WinUI3
+          path: publish/
