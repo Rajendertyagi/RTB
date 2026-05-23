@@ -4,17 +4,13 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     
-    <!-- 1. The Core Unpackaged Settings -->
+    <!-- 1. Unpackaged Configuration -->
     <WindowsPackageType>None</WindowsPackageType>
-    
-    <!-- 2. FORCE THE WINDOWS APP SDK TO BUNDLE ITSELF -->
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
-    
-    <!-- 3. Crucial for Portable Assets (Fixes what you were trying to bypass) -->
     <WindowsAppSDKForceNativeUX>true</WindowsAppSDKForceNativeUX>
     
-    <!-- 4. Optimize the output for a single portable folder -->
-    <RuntimeIdentifiers>win10-x64;win10-x86;win10-arm64</RuntimeIdentifiers>
+    <!-- 2. FIXED PORTABLE RIDS FOR MODERN .NET SDKs -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <SelfContained>true</SelfContained>
     
     <Nullable>enable</Nullable>
