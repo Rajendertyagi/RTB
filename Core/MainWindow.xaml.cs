@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
-using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Web.WebView2.Core;
 using TB.Features;
+using TB.Features.Navigation;
 using TB.Features.Tabs;
 
 namespace TB.Core;
@@ -15,24 +15,24 @@ public sealed partial class MainWindow : Window
 {
     public MainViewModel ViewModel { get; }
     private AppWindow? _appWindow;
-    private WebView2? _webView; // Now resolves to Microsoft.UI.Xaml.Controls.WebView2
+    private OverlappedPresenter? _presenter;
+    private WebView2? _webView;
 
     public MainWindow()
     {
         InitializeComponent();
         ViewModel = new MainViewModel(new TabService(), new NavigationViewModel());
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(TitleBar);
+        SetTitleBar(TitleBar); // ✅ Native drag handled automatically
         _appWindow = this.AppWindow;
+        _presenter = _appWindow?.Presenter as OverlappedPresenter;
         _ = InitializeWebViewAsync();
     }
 
     private async Task InitializeWebViewAsync()
     {
-        // Instantiate control programmatically to bypass XAML compiler RID gaps
         _webView = new WebView2();
         WebViewContainer.Children.Add(_webView);
-
         await _webView.EnsureCoreWebView2Async();
         var core = _webView.CoreWebView2;
         if (core == null) return;
@@ -42,17 +42,12 @@ public sealed partial class MainWindow : Window
         core.NewWindowRequested += (s, e) => { e.Handled = true; ViewModel.OpenInNewTab(e.Uri); };
     }
 
-    private void TitleBar_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        if (e.GetCurrentPoint((UIElement)sender).Properties.IsLeftButtonPressed)
-            InputNonClientPointerSource.GetForWindowId(this.AppWindow.Id).StartDraggingPointerDrag();
-    }
-
-    private void BtnMin_Click(object sender, RoutedEventArgs e) => _appWindow?.Minimize();
+    private void BtnMin_Click(object sender, RoutedEventArgs e) => _presenter?.Minimize();
     private void BtnMax_Click(object sender, RoutedEventArgs e)
     {
-        if (_appWindow?.Presenter is OverlappedPresenter op)
-            (op.IsMaximized ? op.Restore() : op.Maximize());
+        if (_presenter == null) return;
+        if (_presenter.State == OverlappedPresenterState.Maximized) _presenter.Restore();
+        else _presenter.Maximize();
     }
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
