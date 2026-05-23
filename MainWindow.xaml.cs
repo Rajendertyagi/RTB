@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection; // ✅ Required for GetRequiredService
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -60,7 +61,11 @@ public sealed partial class MainWindow : Window
 
     private void TabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        if (args.Tab is TabViewModel tab) _tabManager.CloseTab(tab.Id);
+        // ✅ args.Tab is TabViewItem. The ViewModel is in the DataContext.
+        if (args.Tab.DataContext is TabViewModel tab)
+        {
+            _tabManager.CloseTab(tab.Id);
+        }
     }
 
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
