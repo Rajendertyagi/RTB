@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:vm="using:TB_Browser.ViewModels"
-    xmlns:models="using:TB_Browser.Models"
+    xmlns:local="using:TB_Browser"
     Title="TB Browser">
 
     <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -14,7 +14,6 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Row 0: Draggable TabView Title Bar -->
         <muxc:TabView x:Name="AppTabView"
                       TabItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}"
                       SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
@@ -24,16 +23,10 @@
             
             <muxc:TabView.TabItemTemplate>
                 <DataTemplate x:DataType="vm:TabViewModel">
-                    <muxc:TabViewItem Header="{x:Bind Title, Mode=OneWay}">
-                        <muxc:TabViewItem.IconSource>
-                            <!-- Simple placeholder icon; replace with actual favicon ImageBrush if needed -->
-                            <muxc:FontIconSource Glyph="&#xE774;" />
-                        </muxc:TabViewItem.IconSource>
-                    </muxc:TabViewItem>
+                    <muxc:TabViewItem Header="{x:Bind Title, Mode=OneWay}" />
                 </DataTemplate>
             </muxc:TabView.TabItemTemplate>
 
-            <!-- Custom Window Controls (since native bar is hidden) -->
             <muxc:TabView.TabStripHeader>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="4">
                     <Button x:Name="MinimizeBtn" Content="─" Click="WindowBtn_Click" Tag="Minimize" />
@@ -43,7 +36,6 @@
             </muxc:TabView.TabStripHeader>
         </muxc:TabView>
 
-        <!-- Row 1: Navigation Toolbar -->
         <Grid Grid.Row="1" Padding="8,4,8,8" Background="{ThemeResource SystemControlBackgroundAltHighBrush}"
               BorderBrush="{ThemeResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,0,1">
             <Grid.ColumnDefinitions>
@@ -52,22 +44,13 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Navigation Buttons -->
             <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button x:Name="BackBtn" Click="NavBtn_Click" Tag="Back">
-                    <FontIcon Glyph="&#xE72B;" />
-                </Button>
-                <Button x:Name="ForwardBtn" Click="NavBtn_Click" Tag="Forward">
-                    <FontIcon Glyph="&#xE72A;" />
-                </Button>
-                <Button x:Name="RefreshBtn" Click="NavBtn_Click" Tag="Refresh">
-                    <FontIcon Glyph="&#xE72C;" />
-                </Button>
+                <Button x:Name="BackBtn" Click="NavBtn_Click" Tag="Back"><FontIcon Glyph="&#xE72B;" /></Button>
+                <Button x:Name="ForwardBtn" Click="NavBtn_Click" Tag="Forward"><FontIcon Glyph="&#xE72A;" /></Button>
+                <Button x:Name="RefreshBtn" Click="NavBtn_Click" Tag="Refresh"><FontIcon Glyph="&#xE72C;" /></Button>
             </StackPanel>
 
-            <!-- Address Bar with Autocomplete -->
-            <AutoSuggestBox Grid.Column="1"
-                            Margin="8,0"
+            <AutoSuggestBox Grid.Column="1" Margin="8,0"
                             Text="{x:Bind ViewModel.NavigationViewModel.AddressBarText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             ItemsSource="{x:Bind ViewModel.NavigationViewModel.Suggestions, Mode=OneWay}"
                             QueryIcon="Find"
@@ -75,9 +58,14 @@
                             PlaceholderText="Search or enter address"
                             QuerySubmitted="AddressBar_QuerySubmitted"
                             SuggestionChosen="AddressBar_SuggestionChosen"
-                            TextChanged="AddressBar_TextChanged" />
+                            TextChanged="AddressBar_TextChanged">
+                <AutoSuggestBox.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" />
+                    </DataTemplate>
+                </AutoSuggestBox.ItemTemplate>
+            </AutoSuggestBox>
 
-            <!-- Settings & Menu -->
             <Button Grid.Column="2" x:Name="SettingsBtn">
                 <Button.Flyout>
                     <Flyout Placement="Bottom">
@@ -88,7 +76,6 @@
             </Button>
         </Grid>
 
-        <!-- Row 2: WebView2 -->
         <muxc:WebView2 x:Name="BrowserWebView" Grid.Row="2" />
     </Grid>
 </Window>
