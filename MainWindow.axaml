@@ -4,182 +4,83 @@
         Title="TB"
         Width="1000" Height="600"
         WindowStartupLocation="CenterScreen"
-        SystemDecorations="None"
+        WindowDecorations="None"
         CanResize="True"
         Background="#F8F9FA">
 
-    <Window.Resources>
-        <Style x:Key="PlaceholderTextBox" TargetType="TextBox">
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Grid>
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="16"/>
-                        <ScrollViewer x:Name="PART_ContentHost" 
-                                     Margin="12,0" 
-                                     VerticalAlignment="Center"/>
-                        <TextBlock x:Name="PlaceholderText" 
-                                  Text="{TemplateBinding Tag}" 
-                                  Foreground="#888888" 
-                                  Margin="12,0" 
-                                  VerticalAlignment="Center" 
-                                  IsHitTestVisible="False">
-                            <TextBlock.Styles>
-                                <Style Selector="TextBlock">
-                                    <Setter Property="IsVisible" Value="False"/>
-                                    <Style Selector="TextBlock:when ^TextBox.Text = ''">
-                                        <Setter Property="IsVisible" Value="True"/>
-                                    </Style>
-                                </Style>
-                            </TextBlock.Styles>
-                        </TextBlock>
-                    </Grid>
-                </ControlTemplate>
-            </Setter>
-        </Style>
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="32"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
 
-        <Style x:Key="ChromeTabControl" TargetType="TabControl">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="4,0,0,0"/>
-            <Setter Property="ItemContainerStyle">
-                <Setter.Value>
-                    <Style TargetType="TabItem">
-                        <Setter Property="Template">
-                            <ControlTemplate>
-                                <Grid Margin="1,0,1,0">
-                                    <Border x:Name="Border" 
-                                           Background="Transparent" 
-                                           CornerRadius="6,6,0,0">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <ContentPresenter x:Name="Content" 
-                                                           ContentTemplate="{TemplateBinding HeaderTemplate}"
-                                                           Content="{TemplateBinding Header}"
-                                                           Margin="12,5,4,5" 
-                                                           VerticalAlignment="Center"/>
-                                            <Button x:Name="CloseBtn" 
-                                                   Grid.Column="1" 
-                                                   Content="✕" 
-                                                   Width="16" 
-                                                   Height="16" 
-                                                   FontSize="9" 
-                                                   Padding="0" 
-                                                   Margin="0,0,4,0"
-                                                   IsVisible="False"
-                                                   Click="TabClose_Click">
-                                                <Button.Styles>
-                                                    <Style Selector="Button">
-                                                        <Setter Property="Background" Value="Transparent"/>
-                                                        <Setter Property="Foreground" Value="#555555"/>
-                                                        <Style Selector="Button:when ^TabItem:IsPointerOver=True">
-                                                            <Setter Property="IsVisible" Value="True"/>
-                                                        </Style>
-                                                    </Style>
-                                                </Button.Styles>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                                <Style Selector="Border:when ^TabItem:IsSelected=True">
-                                    <Setter Property="Background" Value="#FFFFFF"/>
-                                    <Setter Property="BorderBrush" Value="#DDDDDD"/>
-                                    <Setter Property="BorderThickness" Value="1,1,1,0"/>
-                                </Style>
-                                <Style Selector="Border:when ^TabItem:IsPointerOver=True">
-                                    <Setter Property="Background" Value="#F1F3F4"/>
-                                </Style>
-                            </ControlTemplate>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
+    <!-- Title Bar -->
+    <Border Grid.Row="0" Background="#E8EAED" PointerPressed="TitleBar_PointerPressed">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Foreground="#3C4043"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <Button Content="─" Width="46" Height="32" Click="BtnMin_Click" Background="Transparent" BorderThickness="0" FontSize="14" Foreground="#3C4043"/>
+          <Button Content="☐" Width="46" Height="32" Click="BtnMax_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
+          <Button Content="" Width="46" Height="32" Click="BtnClose_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
+        </StackPanel>
+      </Grid>
+    </Border>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <!-- Tab Strip -->
+    <TabControl x:Name="TabStrip" 
+               Grid.Row="1" 
+               ItemsSource="{Binding Tabs}" 
+               SelectedItem="{Binding SelectedTab}" 
+               SelectionChanged="TabStrip_SelectionChanged">
+      <TabControl.ItemTemplate>
+        <DataTemplate>
+          <Grid Margin="4,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Title}" VerticalAlignment="Center" FontSize="12" Foreground="#3C4043" Margin="8,0,0,0"/>
+            <Button Grid.Column="1" Content="✕" Width="16" Height="16" FontSize="8" Padding="0" Margin="4,0,0,0" Click="TabClose_Click" Background="Transparent" BorderThickness="0" Foreground="#555555"/>
+          </Grid>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+    </TabControl>
 
-        <!-- Custom Title Bar -->
-        <Border Grid.Row="0" Background="#E8EAED" PointerPressed="TitleBar_PointerPressed">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Foreground="#3C4043"/>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button Content="─" Width="46" Height="32" Click="BtnMin_Click" Background="Transparent" BorderThickness="0" FontSize="14" Foreground="#3C4043"/>
-                    <Button Content="☐" Width="46" Height="32" Click="BtnMax_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
-                    <Button Content="✕" Width="46" Height="32" Click="BtnClose_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+    <!-- Navigation Bar -->
+    <Border Grid.Row="2" Background="#FFFFFF" Padding="8,6" BorderBrush="#E8EAED" BorderThickness="0,0,0,1">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0" Width="32" Height="32"/>
+        <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0" Width="32" Height="32"/>
+        <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0" Width="32" Height="32"/>
+        <!-- ✅ Native Avalonia Watermark replaces complex placeholder template -->
+        <TextBox x:Name="Omnibox" 
+                Grid.Column="3" 
+                Watermark="Search or enter web address" 
+                KeyDown="Omnibox_KeyDown" 
+                Margin="0,0,8,0"/>
+        <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click" Width="32" Height="32"/>
+      </Grid>
+    </Border>
 
-        <!-- Tab Strip -->
-        <TabControl x:Name="TabStrip" 
-                   Grid.Row="1" 
-                   ItemsSource="{Binding Tabs}" 
-                   SelectedItem="{Binding SelectedTab}" 
-                   SelectionChanged="TabStrip_SelectionChanged" 
-                   Style="{StaticResource ChromeTabControl}">
-            <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Title}" 
-                              FontSize="12" 
-                              TextTrimming="CharacterEllipsis" 
-                              MaxWidth="150" 
-                              VerticalAlignment="Center" 
-                              Foreground="#3C4043"/>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-        </TabControl>
-
-        <!-- Navigation Bar -->
-        <Border Grid.Row="2" Background="#FFFFFF" Padding="8,6" BorderBrush="#E8EAED" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0" Width="32" Height="32"/>
-                <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0" Width="32" Height="32"/>
-                <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0" Width="32" Height="32"/>
-                <TextBox x:Name="Omnibox" 
-                        Grid.Column="3" 
-                        Tag="Search or enter web address" 
-                        Style="{StaticResource PlaceholderTextBox}" 
-                        KeyDown="Omnibox_KeyDown" 
-                        Margin="0,0,8,0"/>
-                <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click" Width="32" Height="32"/>
-            </Grid>
-        </Border>
-
-        <!-- ✅ Phase 1 Placeholder: Browser area with message -->
-        <Border Grid.Row="3" Background="#FFFFFF" CornerRadius="8" Margin="8">
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                <TextBlock Text="🌐 WebView2 Integration" FontSize="18" FontWeight="Medium" Foreground="#3C4043"/>
-                <TextBlock Text="Phase 2: Real browsing via Avalonia + WebView2 interop" 
-                          FontSize="12" Foreground="#666666" TextAlignment="Center"/>
-                <TextBlock x:Name="StatusText" 
-                          Text="Ready" 
-                          FontSize="11" 
-                          Foreground="#888888"
-                          Margin="0,8,0,0"/>
-            </StackPanel>
-        </Border>
-    </Grid>
+    <!-- Content Area -->
+    <Border Grid.Row="3" Background="#FFFFFF" CornerRadius="8" Margin="8">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Text=" UI Shell Ready" FontSize="18" FontWeight="Medium" Foreground="#3C4043"/>
+        <TextBlock x:Name="StatusText" Text="Awaiting WebView2 Phase 2" FontSize="12" Foreground="#666666" TextAlignment="Center"/>
+      </StackPanel>
+    </Border>
+  </Grid>
 </Window>
