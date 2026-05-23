@@ -7,9 +7,13 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>14</LangVersion>
-    <!-- ✅ Disable compiled bindings to prevent AVLN2100 parse errors -->
     <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    
+    <!-- ✅ Size Optimization -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <PublishSingleFile>true</PublishSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
