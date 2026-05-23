@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.ApplicationModel.DynamicDependency;
 using TB.Services;
 using TB.ViewModels;
 
@@ -14,7 +15,12 @@ public partial class App : Application
         .AddSingleton<MainViewModel>()
         .BuildServiceProvider();
 
-    public App() => InitializeComponent(); // ✅ Bootstrap already initialized
+    public App()
+    {
+        InitializeComponent();
+        // ✅ Required for unpackaged WinUI 3. Must run before any XAML parses.
+        Bootstrap.Initialize(0x00010000);
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
