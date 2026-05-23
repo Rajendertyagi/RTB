@@ -1,50 +1,38 @@
 using System;
 using System.IO;
-using System.Reflection;
 
 namespace TB_Browser.Infrastructure;
 
 public class PathResolver
 {
-    public string DataDirectory { get; private set; } = string.Empty;
-    public string LogDirectory { get; private set; } = string.Empty;
-    public string DatabasePath { get; private set; } = string.Empty;
+    public string BaseDir { get; }
+    public string DataDir { get; }  // ✅ ADDED: Resolves CS1061
+    public string LogsDir { get; }
+    public string DbPath { get; }
+
+    public PathResolver()
+    {
+        string fallback = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TB-Browser");
+        try
+        {
+            string testPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".write_test");
+            File.Create(testPath).Dispose();
+            File.Delete(testPath);
+            BaseDir = AppDomain.CurrentDomain.BaseDirectory;
+        }
+        catch
+        {
+            BaseDir = fallback;
+        }
+
+        DataDir = Path.Combine(BaseDir, "Data");
+        LogsDir = Path.Combine(BaseDir, "Logs");
+        DbPath = Path.Combine(DataDir, "tb-browser.db");
+    }
 
     public void EnsureDirectories()
     {
-        // Strategy: Try BaseDirectory/Data first
-        var baseDir = AppContext.BaseDirectory;
-        var targetDataDir = Path.Combine(baseDir, "Data");
-        var targetLogDir = Path.Combine(baseDir, "logs");
-
-        // Check write permission
-        try
-        {
-            if (!Directory.Exists(targetDataDir))
-                Directory.CreateDirectory(targetDataDir);
-            
-            // Test write access
-            var testFile = Path.Combine(targetDataDir, ".test");
-            File.WriteAllText(testFile, "");
-            File.Delete(testFile);
-
-            DataDirectory = targetDataDir;
-            LogDirectory = targetLogDir;
-            Directory.CreateDirectory(LogDirectory); // Ensure log dir exists
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Fallback to LocalAppData
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var appFolder = Path.Combine(localAppData, "TB-Browser");
-            
-            DataDirectory = Path.Combine(appFolder, "Data");
-            LogDirectory = Path.Combine(appFolder, "logs");
-            
-            Directory.CreateDirectory(DataDirectory);
-            Directory.CreateDirectory(LogDirectory);
-        }
-
-        DatabasePath = Path.Combine(DataDirectory, "tb-browser.db");
+        Directory.CreateDirectory(DataDir);
+        Directory.CreateDirectory(LogsDir);
     }
 }
