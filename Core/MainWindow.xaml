@@ -18,12 +18,12 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/> <!-- Custom title bar area -->
+            <RowDefinition Height="32"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Custom Title Bar (drag region) -->
+        <!-- Title Bar -->
         <Grid Grid.Row="0" Background="{DynamicResource ControlFillColorDefaultBrush}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -31,9 +31,9 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <ui:Button Icon="HorizontalLine24" Width="40" Height="32" Click="BtnMin_Click"/>
-                <ui:Button Icon="Square24" Width="40" Height="32" Click="BtnMax_Click"/>
-                <ui:Button Icon="Dismiss24" Width="40" Height="32" Click="BtnClose_Click"/>
+                <Button Content="─" Width="40" Height="32" Click="BtnMin_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
+                <Button Content="☐" Width="40" Height="32" Click="BtnMax_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
+                <Button Content="✕" Width="40" Height="32" Click="BtnClose_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
             </StackPanel>
         </Grid>
 
@@ -47,15 +47,15 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <ui:Button Grid.Column="0" Icon="ArrowLeft24" Click="GoBack_Click" Margin="0,0,4,0"/>
-                <ui:Button Grid.Column="1" Icon="ArrowRight24" Click="GoForward_Click" Margin="0,0,4,0"/>
-                <ui:Button Grid.Column="2" Icon="ArrowClockwise24" Click="Reload_Click" Margin="0,0,8,0"/>
-                <ui:TextBox x:Name="Omnibox" Grid.Column="3" PlaceholderText="Search or enter web address" KeyDown="Omnibox_KeyDown"/>
-                <ui:Button Grid.Column="4" Icon="MoreVertical24" Click="OpenSettings_Click"/>
+                <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0" Width="32" Height="32"/>
+                <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0" Width="32" Height="32"/>
+                <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0" Width="32" Height="32"/>
+                <TextBox x:Name="Omnibox" Grid.Column="3" PlaceholderText="Search or enter web address" KeyDown="Omnibox_KeyDown" Margin="0,0,8,0"/>
+                <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click" Width="32" Height="32"/>
             </Grid>
         </Border>
 
-        <!-- Tab Strip -->
+        <!-- Tabs -->
         <TabControl x:Name="TabStrip" Grid.Row="2" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionChanged="TabStrip_SelectionChanged" Style="{StaticResource ChromeTabControl}">
             <TabControl.ItemTemplate>
                 <DataTemplate>
@@ -71,7 +71,7 @@
             </TabControl.ItemTemplate>
         </TabControl>
 
-        <!-- Shared WebView2 -->
+        <!-- WebView2 -->
         <wv2:WebView2 x:Name="BrowserView" Grid.Row="2" Margin="0,28,0,0" />
     </Grid>
 </Window>
