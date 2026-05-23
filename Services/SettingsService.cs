@@ -9,59 +9,47 @@ using TB_Browser.Models;
 namespace TB_Browser.Services;
 
 /// <summary>
-/// Manages user settings persistence and live theme application.
+/// Manages app settings persistence and live theme application.
 /// </summary>
 public class SettingsService
 {
-    private readonly PathResolver _pathResolver;
-    private readonly JsonSerializerOptions _jsonOptions;
-    private AppSettings _settings = new();
-
-    public AppSettings Settings => _settings;
+    private readonly string _settingsPath;
+    public AppSettings Settings { get; private set; } = new();
 
     public SettingsService(PathResolver pathResolver)
     {
-        _pathResolver = pathResolver;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNameCaseInsensitive = true
-        };
+        _settingsPath = Path.Combine(pathResolver.DataDir, "settings.json");
     }
 
+    /// <summary>
+    /// Loads settings from disk. Falls back to defaults on failure.
+    /// </summary>
     public async Task LoadAsync()
     {
-        var path = Path.Combine(_pathResolver.DataDirectory, "settings.json");
         try
         {
-            if (File.Exists(path))
+            if (File.Exists(_settingsPath))
             {
-                var json = await File.ReadAllTextAsync(path);
-                _settings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new AppSettings();
-                LoggingService.Info("Settings loaded.");
-            }
-            else
-            {
-                await SaveAsync(); // Create default
+                var json = await File.ReadAllTextAsync(_settingsPath);
+                var loaded = JsonSerializer.Deserialize<AppSettings>(json);
+                if (loaded != null) Settings = loaded;
             }
         }
         catch (Exception ex)
         {
             LoggingService.Error("Failed to load settings", ex);
-            _settings = new AppSettings(); // Fallback
         }
-
-        ApplyTheme();
     }
 
+    /// <summary>
+    /// Persists current settings to disk.
+    /// </summary>
     public async Task SaveAsync()
     {
-        var path = Path.Combine(_pathResolver.DataDirectory, "settings.json");
         try
         {
-            var json = JsonSerializer.Serialize(_settings, _jsonOptions);
-            await File.WriteAllTextAsync(path, json);
-            ApplyTheme();
+            var json = JsonSerializer.Serialize(Settings, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(_settingsPath, json);
         }
         catch (Exception ex)
         {
@@ -69,16 +57,15 @@ public class SettingsService
         }
     }
 
-    private void ApplyTheme()
+    /// <summary>
+    /// Applies theme instantly without restart.
+    /// </summary>
+    public void ApplyTheme(ElementTheme theme)
     {
-        var theme = _settings.Theme.ToLowerInvariant();
-        var app = Application.Current;
+        // ✅ Fixes CS0029: Explicit safe cast between numerically identical WinUI 3 enums
+        Application.Current.RequestedTheme = (ApplicationTheme)(int)theme;
         
-        app.RequestedTheme = theme switch
-        {
-            "light" => ElementTheme.Light,
-            "dark" => ElementTheme.Dark,
-            _ => ElementTheme.Default // System
-        };
+        if (Window.Current?.Content is FrameworkElement root)
+            root.RequestedTheme = theme;
     }
 }
