@@ -1,42 +1,42 @@
-<PropertyGroup>
-  <OutputType>WinExe</OutputType>
-  <!-- TFM must match the BuildTools SDK family -->
-  <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
-  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-  
-  <!-- CRITICAL: Explicitly lock BuildTools to the same SDK family as TFM -->
-  <WindowsSdkPackageVersion>10.0.26100.1742</WindowsSdkPackageVersion>
-  
-  <!-- Allow building on machines without full Windows SDK installed -->
-  <EnableWindowsTargeting>true</EnableWindowsTargeting>
-  
-  <RootNamespace>TB_Browser</RootNamespace>
-  <AssemblyName>TB-Browser</AssemblyName>
-  <ApplicationManifest>app.manifest</ApplicationManifest>
-  <Platforms>x64</Platforms>
-  <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-  
-  <Nullable>enable</Nullable>
-  <LangVersion>14</LangVersion>
-  <ImplicitUsings>enable</ImplicitUsings>
-  
-  <!-- WinUI 3 Unpackaged Config (Microsoft Docs Standard) -->
-  <UseWinUI>true</UseWinUI>
-  <WindowsPackageType>None</WindowsPackageType>
-  <!-- DO NOT use EnableMsixTooling for unpackaged apps -->
-  
-  <SelfContained>false</SelfContained>
-  <PublishSingleFile>false</PublishSingleFile>
-  <PublishTrimmed>false</PublishTrimmed>
-</PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <WindowsSdkPackageVersion>10.0.26100.1742</WindowsSdkPackageVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    
+    <RootNamespace>TB_Browser</RootNamespace>
+    <AssemblyName>TB-Browser</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    
+    <Nullable>enable</Nullable>
+    <LangVersion>14</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
 
-<ItemGroup>
-  <!-- App SDK & BuildTools MUST share the same SDK family (26100) -->
-  <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
-  <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-  
-  <PackageReference Include="Dapper" Version="2.1.35" />
-  <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
-  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-  <Manifest Include="$(ApplicationManifest)" />
-</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="**\*.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>
