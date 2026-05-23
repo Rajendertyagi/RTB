@@ -1,50 +1,38 @@
-name: Build and Release Portable WinUI 3 App
-
-on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*' # Triggers the automatic release pipeline when a version tag like v1.0.0 is pushed
-  workflow_dispatch: # Allows you to trigger this workflow manually from the GitHub Actions UI
-
-permissions:
-  contents: write # Grants the runner write permissions to create releases and attach assets
+name: Build TB (WinUI 3 Phase 1)
+on: [push, workflow_dispatch]
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with: { token: ${{ secrets.GITHUB_TOKEN }}, persist-credentials: false }
 
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x' # Standardizes on the .NET 8 SDK framework line
+      - uses: actions/setup-dotnet@v5
+        with: { dotnet-version: '8.0.x' }
 
-    - name: Publish Portable App (Self-Contained)
-      # Setting AppxPackageDir to a temporary directory tricks the compiler out of looking for non-existent local VS components
-      run: |
-        dotnet publish -c Release -r win-x64 --self-contained true -p:Platform=x64 -p:AppxPackageDir="./dummy_out" -o ./portable-build
+      - name: Clean Workspace
+        run: |
+          Remove-Item *.zip -Force -ErrorAction SilentlyContinue
+          Remove-Item bin,obj -Recurse -Force -ErrorAction SilentlyContinue
 
-    - name: Zip the Output Folder
-      shell: pwsh
-      run: |
-        Compress-Archive -Path ./portable-build/* -DestinationPath ./WinUI3-Portable-x64.zip
+      - run: dotnet restore
+      - run: dotnet build TB.csproj -c Release
 
-    - name: Upload Build Artifact (Internal Actions Storage)
-      uses: actions/upload-artifact@v4
-      with:
-        name: Portable-App-Package
-        path: ./WinUI3-Portable-x64.zip
+      - name: Publish
+        run: dotnet publish TB.csproj -c Release -r win-x64 --self-contained false
 
-    # This deployment block only triggers when you push an explicit release tag to your git history
-    - name: Create Official GitHub Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v2
-      with:
-        files: ./WinUI3-Portable-x64.zip
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Portable ZIP
+        run: |
+          $pub = "bin/Release/net8.0-windows10.0.19041.0/win-x64"
+          Compress-Archive -Path "$pub/*" -DestinationPath TB-Portable.zip -Force
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: TB-Portable
+          path: TB-Portable.zip
+          if-no-files-found: error
+          retention-days: 14
