@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
-      - name: ⚙️ Setup .NET 10
+      - name: ️ Setup .NET 10
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
@@ -42,8 +42,10 @@ jobs:
           dotnet restore
         shell: pwsh
 
-      - name: 🧹 Clean Build Artifacts
-        run: dotnet clean -c ${{ env.CONFIGURATION }}
+      - name: 🧹 Clean Stale Build Artifacts (Required for WinUI 3)
+        run: |
+          Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue
+          dotnet clean -c ${{ env.CONFIGURATION }}
         shell: pwsh
 
       - name: 🔨 Build & Publish (Framework-Dependent)
@@ -61,7 +63,6 @@ jobs:
       - name: 🧹 Strip Runtime & SDK Files for Minimal Build
         run: |
           Set-Location ./publish
-          
           $keep = @(
             "TB-Browser.exe",
             "TB-Browser.dll",
@@ -77,13 +78,11 @@ jobs:
             "SQLitePCLRaw.provider.e_sqlite3.dll",
             "WebView2Loader.dll"
           )
-          
           Get-ChildItem -Recurse | Where-Object { 
             -not ($keep -contains $_.Name) -and 
             -not ($_.Name -like "*.pdb") -and 
             -not ($_.Name -like "*.xml") 
           } | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-          
           Get-ChildItem -Directory -Recurse | Where-Object { $_.GetFileSystemInfos().Count -eq 0 } | Remove-Item -Force -Recurse
         shell: pwsh
 
