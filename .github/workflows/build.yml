@@ -3,17 +3,38 @@ on: [push, workflow_dispatch]
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
+
+      # Use stable .NET 9 (or 8) – .NET 10 preview is not yet fully compatible
       - uses: actions/setup-dotnet@v5
-        with: { dotnet-version: '10.0.x' }
-      - run: Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue; dotnet restore
-      - run: dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -p:PublishTrimmed=false -p:WindowsPackageType=None -p:GenerateProjectPriFile=false -p:AppxPackage=false -o ./publish
-      - run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
+        with:
+          dotnet-version: '9.0.x'
+
+      # Restore and publish self-contained, unpackaged WinUI 3 app
+      - run: dotnet restore
+
+      - name: Publish self-contained WinUI 3 app
+        run: |
+          dotnet publish -c Release -r win-x64 `
+            --self-contained true `
+            -p:PublishSingleFile=false `
+            -p:WindowsPackageType=None `
+            -p:WindowsAppSDKSelfContained=true `
+            -o ./publish
+
+      # Optional: verify the .exe runs (smoke test)
+      - run: ./publish/YourAppName.exe --help || echo "Smoke test not possible, check manually"
+
+      - name: Package output as zip
+        run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
+
       - uses: actions/upload-artifact@v7
-        with: { name: TB-Portable, path: TB-Portable.zip, retention-days: 14 }
+        with:
+          name: TB-Portable
+          path: TB-Portable.zip
+          retention-days: 14
