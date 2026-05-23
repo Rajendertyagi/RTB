@@ -27,8 +27,19 @@ public partial class MainWindow
         await BrowserView.EnsureCoreWebView2Async();
         if (BrowserView.CoreWebView2 != null && ViewModel.SelectedTab != null)
         {
+            // ✅ Sync address bar on navigation
+            BrowserView.CoreWebView2.SourceChanged += CoreWebView2_SourceChanged;
             BrowserView.CoreWebView2.Navigate(ViewModel.SelectedTab.Url);
             BrowserView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
+        }
+    }
+
+    // ✅ Update omnibox when URL changes
+    private void CoreWebView2_SourceChanged(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e)
+    {
+        if (BrowserView.CoreWebView2?.Source != null)
+        {
+            Dispatcher.Invoke(() => Omnibox.Text = BrowserView.CoreWebView2.Source);
         }
     }
 
@@ -61,6 +72,9 @@ public partial class MainWindow
     private void BtnMax_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
+    // ✅ Add new tab
+    private void AddTab_Click(object sender, RoutedEventArgs e) => ViewModel.AddTab();
+
     private void GoBack_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoBack();
     private void GoForward_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoForward();
     private void Reload_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.Reload();
@@ -80,10 +94,15 @@ public partial class MainWindow
 
     private void TabClose_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.DataContext is TabViewModel tab) tab.Close();
+        // Handle both template button click and data context
+        if (sender is Button btn)
+        {
+            if (btn.DataContext is TabViewModel tab) { tab.Close(); return; }
+            if (btn.TemplatedParent is ContentPresenter cp && cp.DataContext is TabViewModel tab2) { tab2.Close(); return; }
+        }
+        if (sender is TabItem ti && ti.DataContext is TabViewModel tab3) { tab3.Close(); }
     }
 
     private void OpenSettings_Click(object sender, RoutedEventArgs e) { /* Phase 3 */ }
-
     private void MainWindow_Closed(object? sender, EventArgs e) => BrowserView?.Dispose();
 }
