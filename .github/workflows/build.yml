@@ -30,23 +30,23 @@ jobs:
 
       - name: Create Portable ZIP (Flat Structure)
         run: |
-          # ✅ Remove stale artifacts
-          Remove-Item *.zip -Force -ErrorAction SilentlyContinue
+          $workspace = $env:GITHUB_WORKSPACE
+          $publishDir = Join-Path $workspace "bin/Release/net8.0-windows10.0.26100.0/win-x64"
+          $zipPath = Join-Path $workspace "TB-Portable.zip"
           
-          # ✅ Define paths
-          $publishDir = "bin/Release/net8.0-windows10.0.26100.0/win-x64"
-          $zipPath = "TB-Portable.zip"
+          # Clean previous artifacts
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
           
-          # ✅ Create flat ZIP: contents of publish/ directly in root of zip (no nested "publish/" folder)
+          # Create flat ZIP (contents of publish dir only, no parent folder)
           Push-Location $publishDir
-          Compress-Archive -Path * -DestinationPath "../../../$zipPath" -Force
+          Compress-Archive -Path * -DestinationPath $zipPath -Force
           Pop-Location
           
-          # ✅ Verify ZIP contents (debug output)
+          # Verify output
           Write-Host "=== ZIP Contents ==="
-          Expand-Archive -Path $zipPath -DestinationPath "./verify" -Force
-          Get-ChildItem -Path "./verify" -Recurse | Select-Object FullName
-          Remove-Item "./verify" -Recurse -Force
+          Expand-Archive -Path $zipPath -DestinationPath "$workspace/verify" -Force
+          Get-ChildItem -Path "$workspace/verify" | Select-Object Name
+          Remove-Item "$workspace/verify" -Recurse -Force
 
       - uses: actions/upload-artifact@v7
         with:
