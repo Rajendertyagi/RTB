@@ -14,6 +14,8 @@
     <GenerateLibraryLayout>false</GenerateLibraryLayout>
     <EnableMsixTooling>false</EnableMsixTooling>
     <DisableWinUIXamlDiagnostics>true</DisableWinUIXamlDiagnostics>
+    <DisablePriGeneration>true</DisablePriGeneration> <!-- ✅ Fixes MSB4062 -->
+    <WindowsAppSdkBundleEnable>false</WindowsAppSdkBundleEnable> <!-- ✅ Fixes MSB4062 -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
@@ -26,14 +28,12 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
   </ItemGroup>
 
-  <!-- ✅ Fix entry point + avoid duplicate Page items -->
   <ItemGroup>
     <ApplicationDefinition Include="Core\App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Remove="Core\App.xaml" /> <!-- Prevent duplicate inclusion -->
-    
+    <Page Remove="Core\App.xaml" />
     <Content Include="Assets\Fonts\GoogleSans-Regular.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
