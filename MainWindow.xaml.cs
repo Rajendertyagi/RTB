@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core;
 using TB.Services;
 using TB.ViewModels;
 
@@ -27,6 +26,8 @@ public sealed partial class MainWindow : Window
 
         this.ExtendsContentIntoTitleBar = true;
         this.SetTitleBar(TitleBarGrid);
+        
+        // ✅ WinUI 3 requires AppWindow for sizing (XAML Width/Height are ignored)
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 600));
 
         _webViewService.InitializeAsync(WebView).ContinueWith(_ =>
@@ -42,19 +43,17 @@ public sealed partial class MainWindow : Window
 
     private void Minimize_Click(object sender, RoutedEventArgs e) 
     {
-        // Handled by AppWindow presenter
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        presenter?.Minimize();
     }
 
     private void Maximize_Click(object sender, RoutedEventArgs e) 
     {
         var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
-        if (presenter != null)
-        {
-            if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
-                presenter.Restore();
-            else
-                presenter.Maximize();
-        }
+        if (presenter?.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
+            presenter.Restore();
+        else
+            presenter?.Maximize();
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
