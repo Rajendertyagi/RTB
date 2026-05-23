@@ -19,10 +19,10 @@ jobs:
       - name: Clean & Restore
         run: |
           rm -rf obj bin publish
-          dotnet restore
+          # ✅ Restore with explicit RID to generate win-x64 assets
+          dotnet restore TB.csproj -r win-x64
 
-      - name: Build (Windows Target)
-        # ✅ Explicit RID ensures Windows output even on Linux runner
+      - name: Build
         run: dotnet build TB.csproj --configuration Release --no-restore -r win-x64
 
       - name: Publish Windows
