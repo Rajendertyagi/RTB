@@ -3,14 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TB_Browser.Infrastructure;
-using TB_Browser.Models;
+using TB_Browser.Models; // ADDED
 using TB_Browser.Repositories;
 
 namespace TB_Browser.Services;
 
-/// <summary>
-/// Manages history visit queue, flushes to SQLite, and enforces 30-day retention.
-/// </summary>
 public class HistoryService
 {
     private readonly HistoryRepository _repository;
@@ -28,7 +25,7 @@ public class HistoryService
             Url = url,
             Title = title,
             LastVisited = DateTime.UtcNow,
-            FirstVisited = DateTime.UtcNow, // Updated on UPSERT
+            FirstVisited = DateTime.UtcNow,
             TypedCount = typed ? 1 : 0
         };
         _queue.Enqueue(entry);
@@ -36,7 +33,6 @@ public class HistoryService
 
     public async Task FlushAsync()
     {
-        // Run 30-day purge once per session
         if (!_purgeDone)
         {
             var cutoff = DateTime.UtcNow.AddDays(-30);
@@ -54,7 +50,6 @@ public class HistoryService
         {
             var batch = DequeueAll();
             if (batch.Count == 0) return;
-
             await RetryAsync(() => _repository.UpsertBatchAsync(batch), maxRetries: 3);
             LoggingService.Info($"Flushed {batch.Count} history entries.");
         }
@@ -62,10 +57,7 @@ public class HistoryService
         {
             LoggingService.Error("History flush failed permanently", ex);
         }
-        finally
-        {
-            lock (_flushLock) _isFlushing = false;
-        }
+        finally { lock (_flushLock) _isFlushing = false; }
     }
 
     private List<HistoryEntry> DequeueAll()
@@ -79,11 +71,7 @@ public class HistoryService
     {
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
-            try
-            {
-                await action();
-                return;
-            }
+            try { await action(); return; }
             catch (Exception ex)
             {
                 LoggingService.Error($"History attempt {attempt} failed", ex);
