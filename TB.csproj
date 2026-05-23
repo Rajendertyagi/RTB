@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260508005" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.5581" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3295.45" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
