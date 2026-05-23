@@ -3,9 +3,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <WindowsSdkPackageVersion>10.0.26100.32</WindowsSdkPackageVersion>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    
     <RootNamespace>TB_Browser</RootNamespace>
     <AssemblyName>TB-Browser</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -16,9 +13,12 @@
     <LangVersion>14</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     
+    <!-- FIXED: WinUI 3 Unpackaged App Configuration (Per Microsoft Docs) -->
     <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- REMOVED: EnableMsixTooling (causes XamlCompiler target conflicts in CI for unpackaged apps) -->
+    
     <SelfContained>false</SelfContained>
     <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
@@ -33,6 +33,7 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- XAML Compilation: Update only (SDK auto-includes Pages) -->
   <ItemGroup>
     <Page Update="**\*.xaml">
       <Generator>MSBuild:Compile</Generator>
