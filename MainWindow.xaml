@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="using:TB"
         xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-        xmlns:vm="using:TB.ViewModels"
-        x:DataType="local:MainWindow">
+        xmlns:vm="using:TB.ViewModels">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -24,7 +23,7 @@
         </Grid>
 
         <controls:TabView x:Name="TabView" Grid.Row="1"
-                          TabItemsSource="{x:Bind ViewModel.Tabs}"
+                          ItemsSource="{x:Bind ViewModel.Tabs}"
                           SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
                           TabCloseRequested="TabView_TabCloseRequested">
             <controls:TabView.TabItemTemplate>
