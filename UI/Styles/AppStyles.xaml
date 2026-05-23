@@ -1,16 +1,20 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Safe fallback font stack (Google Sans added at runtime later) -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Safe fallback font stack (prevents CI XamlCompiler URI parsing crashes) -->
     <FontFamily x:Key="DefaultFont">Segoe UI, Segoe UI Variable, Roboto, sans-serif</FontFamily>
-    
+
     <Style TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
         <Setter Property="FontFamily" Value="{StaticResource DefaultFont}"/>
     </Style>
+
     <Style TargetType="Button">
         <Setter Property="CornerRadius" Value="8"/>
     </Style>
+
     <Style TargetType="TextBox">
         <Setter Property="CornerRadius" Value="16"/>
     </Style>
+
     <Style TargetType="AutoSuggestBox">
         <Setter Property="CornerRadius" Value="16"/>
     </Style>
