@@ -6,14 +6,14 @@ namespace TB.Services;
 public class WebViewService
 {
     public CoreWebView2? CoreWebView2 { get; private set; }
-    public event Action<string>? SourceChanged;
-    public event Action<string?>? NavigationCompleted;
+    public event EventHandler<object>? SourceChanged;
+    public event EventHandler<object>? NavigationCompleted;
 
     public async Task InitializeAsync(WebView2 webView)
     {
         await webView.EnsureCoreWebView2Async();
         CoreWebView2 = webView.CoreWebView2;
-        CoreWebView2.SourceChanged += (s, e) => SourceChanged?.Invoke(CoreWebView2.Source);
-        CoreWebView2.NavigationCompleted += (s, e) => NavigationCompleted?.Invoke(CoreWebView2.DocumentTitle);
+        CoreWebView2.SourceChanged += (s, e) => SourceChanged?.Invoke(this, EventArgs.Empty);
+        CoreWebView2.NavigationCompleted += (s, e) => NavigationCompleted?.Invoke(this, EventArgs.Empty);
     }
 }
