@@ -1,6 +1,5 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:webview="using:Avalonia.Controls.WebView"
         x:Class="TB.MainWindow"
         Title="TB"
         Width="1000" Height="600"
@@ -169,7 +168,18 @@
             </Grid>
         </Border>
 
-        <!-- WebView2 Control -->
-        <webview:WebView x:Name="BrowserView" Grid.Row="3" Margin="0,0,0,0"/>
+        <!-- ✅ Phase 1 Placeholder: Browser area with message -->
+        <Border Grid.Row="3" Background="#FFFFFF" CornerRadius="8" Margin="8">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <TextBlock Text="🌐 WebView2 Integration" FontSize="18" FontWeight="Medium" Foreground="#3C4043"/>
+                <TextBlock Text="Phase 2: Real browsing via Avalonia + WebView2 interop" 
+                          FontSize="12" Foreground="#666666" TextAlignment="Center"/>
+                <TextBlock x:Name="StatusText" 
+                          Text="Ready" 
+                          FontSize="11" 
+                          Foreground="#888888"
+                          Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
