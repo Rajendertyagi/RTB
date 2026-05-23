@@ -16,8 +16,8 @@
     <DisableMsixProjectCapabilityCheck>true</DisableMsixProjectCapabilityCheck>
     <EnableMsixTooling>false</EnableMsixTooling>
     <DisableWinUIXamlDiagnostics>true</DisableWinUIXamlDiagnostics>
-    <GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild>
-    <GeneratePriResource>false</GeneratePriResource>
+    <GenerateProjectPriFile>false</GenerateProjectPriFile>
+    <AppxPackage>false</AppxPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +40,13 @@
     </Content>
   </ItemGroup>
 
-  <!-- ✅ Bypass MSBuild evaluation order bug -->
-  <Target Name="SkipExpandPriContent" BeforeTargets="ExpandPriContent" />
+  <!-- ✅ Official MSBuild Target Override: Removes ExpandPriContent before evaluation -->
+  <Target Name="DisablePriGeneration" BeforeTargets="GenerateProjectPriFile">
+    <PropertyGroup>
+      <GenerateProjectPriFile>false</GenerateProjectPriFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <_GenerateProjectPriFileDependsOn Remove="ExpandPriContent" />
+    </ItemGroup>
+  </Target>
 </Project>
