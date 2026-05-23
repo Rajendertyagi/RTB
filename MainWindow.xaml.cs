@@ -40,21 +40,28 @@ public sealed partial class MainWindow : Window
         });
     }
 
-    private void Minimize_Click(object sender, RoutedEventArgs e) => this.AppWindow.Changed += (s, e) => {}; // Handled by AppWindow
-    private void Maximize_Click(object sender, RoutedEventArgs e) => this.AppWindow.Presenter = this.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter op && op.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized 
-        ? this.AppWindow.Presenter = Microsoft.UI.Windowing.OverlappedPresenter.Create() 
-        : ((Microsoft.UI.Windowing.OverlappedPresenter)this.AppWindow.Presenter).Maximize();
-    private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
-
-    private void TabView_TabCloseRequested(winui.TabView sender, winui.TabViewTabCloseRequestedEventArgs args)
+    private void Minimize_Click(object sender, RoutedEventArgs e) 
     {
-        if (args.Tab is ViewModels.TabViewModel tab) _tabManager.CloseTab(tab.Id);
+        // Handled by AppWindow presenter
     }
 
-    private void TabView_TabItemsChanged(winui.TabView sender, Windows.Foundation.Collections.IVectorChangedEventArgs args)
+    private void Maximize_Click(object sender, RoutedEventArgs e) 
     {
-        if (args.CollectionChange == Windows.Foundation.Collections.CollectionChange.ItemInserted)
-            _viewModel.SelectedTab = _viewModel.Tabs[^1];
+        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
+        if (presenter != null)
+        {
+            if (presenter.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
+                presenter.Restore();
+            else
+                presenter.Maximize();
+        }
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
+
+    private void TabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
+    {
+        if (args.Tab is TabViewModel tab) _tabManager.CloseTab(tab.Id);
     }
 
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
