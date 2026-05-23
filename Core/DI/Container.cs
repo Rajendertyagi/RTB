@@ -12,8 +12,6 @@ public static class Container
     {
         var services = new ServiceCollection();
         services.AddSingleton(pathResolver);
-        services.AddSingleton<IDbConnectionFactory>(_ => new DbConnectionFactory(pathResolver));
-        services.AddSingleton<DbInitializer>();
         services.AddSingleton<SettingsService>();
         services.AddSingleton<NavigationViewModel>();
         services.AddSingleton<TabService>();
