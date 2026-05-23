@@ -1,4 +1,4 @@
-name: Build TB (WinUI 3 Phase 1)
+name: Build TB (WinUI 3 SDK 2.1)
 on: [push, workflow_dispatch]
 env:
   DOTNET_NOLOGO: true
@@ -28,14 +28,30 @@ jobs:
       - name: Publish
         run: dotnet publish TB.csproj -c Release -r win-x64 --self-contained false
 
-      - name: Create Portable ZIP
+      - name: Create Portable ZIP (Flat Structure)
         run: |
-          $pub = "bin/Release/net8.0-windows10.0.26100.0/win-x64"
-          Compress-Archive -Path "$pub/*" -DestinationPath TB-Portable.zip -Force
+          # ✅ Remove stale artifacts
+          Remove-Item *.zip -Force -ErrorAction SilentlyContinue
+          
+          # ✅ Define paths
+          $publishDir = "bin/Release/net8.0-windows10.0.26100.0/win-x64"
+          $zipPath = "TB-Portable.zip"
+          
+          # ✅ Create flat ZIP: contents of publish/ directly in root of zip (no nested "publish/" folder)
+          Push-Location $publishDir
+          Compress-Archive -Path * -DestinationPath "../../../$zipPath" -Force
+          Pop-Location
+          
+          # ✅ Verify ZIP contents (debug output)
+          Write-Host "=== ZIP Contents ==="
+          Expand-Archive -Path $zipPath -DestinationPath "./verify" -Force
+          Get-ChildItem -Path "./verify" -Recurse | Select-Object FullName
+          Remove-Item "./verify" -Recurse -Force
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: TB-Portable
           path: TB-Portable.zip
           if-no-files-found: error
           retention-days: 14
+          compression-level: 6
