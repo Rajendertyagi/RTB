@@ -1,12 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!-- Use a supported Windows TFM family (19041 = Win10 2004+, widely available) -->
+    <!-- Supported TFM for WinUI 3 C# apps -->
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     
-    <!-- Enable cross-machine targeting (critical for CI) -->
+    <!-- CI targeting: allows builds without full Windows SDK installed -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    
+    <!-- WinUI 3 Unpackaged Configuration (CRITICAL) -->
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <!-- REMOVED: EnableMsixTooling (causes XamlCompiler target conflicts) -->
+    
+    <!-- XAML Compiler CI Workaround (Per Microsoft Troubleshooting Docs) -->
+    <DisableXamlCompilerBinarySerialization>true</DisableXamlCompilerBinarySerialization>
+    <GenerateLibraryLayout>false</GenerateLibraryLayout>
     
     <RootNamespace>TB_Browser</RootNamespace>
     <AssemblyName>TB-Browser</AssemblyName>
@@ -18,17 +27,13 @@
     <LangVersion>14</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     
-    <!-- WinUI 3 Unpackaged Configuration -->
-    <UseWinUI>true</UseWinUI>
-    <WindowsPackageType>None</WindowsPackageType>
-    
     <SelfContained>false</SelfContained>
     <PublishSingleFile>false</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- WinUI 3 runtime + build tools (manages its own SDK refs) -->
+    <!-- WinUI 3 runtime (manages its own SDK references) -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
     
     <!-- Data & MVVM -->
