@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with: { dotnet-version: '10.0.x' }
       - run: Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue; dotnet restore
-      - run: dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -p:PublishTrimmed=false -o ./publish
+      - run: dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -p:PublishTrimmed=false -p:GeneratePriResource=false -p:WindowsPackageType=None -o ./publish
       - run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
       - uses: actions/upload-artifact@v7
         with: { name: TB-Portable, path: TB-Portable.zip, retention-days: 14 }
