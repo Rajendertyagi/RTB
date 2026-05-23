@@ -30,7 +30,7 @@ jobs:
 
       - name: Create Portable ZIP
         run: |
-          $pub = "bin/Release/net8.0-windows10.0.19041.0/win-x64"
+          $pub = "bin/Release/net8.0-windows10.0.26100.0/win-x64"
           Compress-Archive -Path "$pub/*" -DestinationPath TB-Portable.zip -Force
 
       - uses: actions/upload-artifact@v5
