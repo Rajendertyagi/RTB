@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="using:TB"
         xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-        xmlns:wv2="using:Microsoft.Web.WebView2.Controls"
         xmlns:vm="using:TB.ViewModels"
         x:DataType="local:MainWindow">
 
@@ -50,6 +49,6 @@
                      KeyDown="Omnibox_KeyDown" Margin="0,0,8,0"/>
         </Grid>
 
-        <wv2:WebView2 x:Name="WebView" Grid.Row="3"/>
+        <controls:WebView2 x:Name="WebView" Grid.Row="3"/>
     </Grid>
 </Window>
