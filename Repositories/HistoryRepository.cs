@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dapper;
 using TB_Browser.Infrastructure;
-using TB_Browser.Models; // ADDED: Fixes CS0246
+using TB_Browser.Models; // ✅ MUST BE THIS EXACT NAMESPACE
 
 namespace TB_Browser.Repositories;
 
@@ -21,7 +21,14 @@ public class HistoryRepository
     public async Task UpsertBatchAsync(IEnumerable<HistoryEntry> entries)
     {
         using var conn = _factory.CreateConnection();
-        await conn.ExecuteAsync(@"INSERT INTO History (Url, Title, LastVisited, TypedCount) VALUES (@Url, @Title, @LastVisited, @TypedCount) ON CONFLICT(Url) DO UPDATE SET Title = excluded.Title, LastVisited = excluded.LastVisited, TypedCount = excluded.TypedCount, VisitCount = History.VisitCount + 1;", entries);
+        await conn.ExecuteAsync(@"
+            INSERT INTO History (Url, Title, LastVisited, TypedCount) 
+            VALUES (@Url, @Title, @LastVisited, @TypedCount) 
+            ON CONFLICT(Url) DO UPDATE SET 
+                Title = excluded.Title, 
+                LastVisited = excluded.LastVisited, 
+                TypedCount = excluded.TypedCount, 
+                VisitCount = History.VisitCount + 1;", entries);
     }
 
     public async Task PurgeOlderThanAsync(DateTime cutoffDate)
