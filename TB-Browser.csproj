@@ -1,28 +1,32 @@
-<PropertyGroup>
-  <OutputType>WinExe</OutputType>
-  <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
-  <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-  <EnableWindowsTargeting>true</EnableWindowsTargeting>
-  
-  <UseWinUI>true</UseWinUI>
-  <WindowsPackageType>None</WindowsPackageType>
-  <GenerateLibraryLayout>false</GenerateLibraryLayout>
-  
-  <!-- OFFICIAL: Forces XamlCompiler to output the EXACT parsing error -->
-  <XamlDiagnostics>Diagnostic</XamlDiagnostics>
-  <EnableXamlParserDiagnostics>true</EnableXamlParserDiagnostics>
-  
-  <RootNamespace>TB_Browser</RootNamespace>
-  <AssemblyName>TB-Browser</AssemblyName>
-  <ApplicationManifest>app.manifest</ApplicationManifest>
-  <Platforms>x64</Platforms>
-  <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-  
-  <Nullable>enable</Nullable>
-  <LangVersion>14</LangVersion>
-  <ImplicitUsings>enable</ImplicitUsings>
-  
-  <SelfContained>false</SelfContained>
-  <PublishSingleFile>false</PublishSingleFile>
-  <PublishTrimmed>false</PublishTrimmed>
-</PropertyGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>TB_Browser</RootNamespace>
+    <AssemblyName>TB-Browser</AssemblyName>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <Nullable>enable</Nullable>
+    <LangVersion>14</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Update="**\*.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+</Project>
