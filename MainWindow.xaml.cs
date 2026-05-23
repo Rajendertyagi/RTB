@@ -61,7 +61,7 @@ public sealed partial class MainWindow : Window
 
     private void TabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        // ✅ args.Tab is TabViewItem. The ViewModel is in the DataContext.
+        // ✅ Fix: args.Tab is TabViewItem. ViewModel is in DataContext.
         if (args.Tab.DataContext is TabViewModel tab)
         {
             _tabManager.CloseTab(tab.Id);
