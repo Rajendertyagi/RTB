@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,9 @@ public partial class MainWindow
 {
     public MainViewModel ViewModel { get; }
 
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int wMsg, int wParam, int lParam);
+
     public MainWindow()
     {
         InitializeComponent();
@@ -20,6 +24,7 @@ public partial class MainWindow
         DataContext = ViewModel;
         Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
+        SizeChanged += MainWindow_SizeChanged;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -27,14 +32,12 @@ public partial class MainWindow
         await BrowserView.EnsureCoreWebView2Async();
         if (BrowserView.CoreWebView2 != null && ViewModel.SelectedTab != null)
         {
-            // ✅ Sync address bar on navigation
             BrowserView.CoreWebView2.SourceChanged += CoreWebView2_SourceChanged;
             BrowserView.CoreWebView2.Navigate(ViewModel.SelectedTab.Url);
             BrowserView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
         }
     }
 
-    // ✅ Update omnibox when URL changes
     private void CoreWebView2_SourceChanged(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e)
     {
         if (BrowserView.CoreWebView2?.Source != null)
@@ -65,14 +68,14 @@ public partial class MainWindow
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton == MouseButton.Left) DragMove();
+        if (e.ChangedButton == MouseButton.Left)
+            DragMove();
     }
 
     private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void BtnMax_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
 
-    // ✅ Add new tab
     private void AddTab_Click(object sender, RoutedEventArgs e) => ViewModel.AddTab();
 
     private void GoBack_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoBack();
@@ -94,7 +97,6 @@ public partial class MainWindow
 
     private void TabClose_Click(object sender, RoutedEventArgs e)
     {
-        // Handle both template button click and data context
         if (sender is Button btn)
         {
             if (btn.DataContext is TabViewModel tab) { tab.Close(); return; }
@@ -105,4 +107,5 @@ public partial class MainWindow
 
     private void OpenSettings_Click(object sender, RoutedEventArgs e) { /* Phase 3 */ }
     private void MainWindow_Closed(object? sender, EventArgs e) => BrowserView?.Dispose();
+    private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e) { /* Trigger layout update */ }
 }
