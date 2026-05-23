@@ -12,6 +12,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateLibraryLayout>false</GenerateLibraryLayout>
+    <EnableMsixTooling>false</EnableMsixTooling> <!-- ✅ ADDED: Fixes XamlCompiler crash -->
   </PropertyGroup>
 
   <ItemGroup>
