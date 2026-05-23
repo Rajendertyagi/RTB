@@ -6,9 +6,9 @@ namespace TB_Browser.Infrastructure;
 public class PathResolver
 {
     public string BaseDir { get; }
-    public string DataDir { get; }  // ✅ ADDED: Resolves CS1061
+    public string DataDir { get; }
     public string LogsDir { get; }
-    public string DbPath { get; }
+    public string DatabasePath { get; } // ✅ ADDED: Matches DbConnectionFactory call
 
     public PathResolver()
     {
@@ -20,14 +20,11 @@ public class PathResolver
             File.Delete(testPath);
             BaseDir = AppDomain.CurrentDomain.BaseDirectory;
         }
-        catch
-        {
-            BaseDir = fallback;
-        }
+        catch { BaseDir = fallback; }
 
         DataDir = Path.Combine(BaseDir, "Data");
         LogsDir = Path.Combine(BaseDir, "Logs");
-        DbPath = Path.Combine(DataDir, "tb-browser.db");
+        DatabasePath = Path.Combine(DataDir, "tb-browser.db"); // ✅ Sets property
     }
 
     public void EnsureDirectories()
