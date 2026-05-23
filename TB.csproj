@@ -14,9 +14,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- ✅ Core SDK -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260508005" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2739.15" />
+    
+    <!-- ✅ Updated to match SDK 1.8 dependency chain -->
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3179.45" />
+    
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
   </ItemGroup>
