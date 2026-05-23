@@ -58,6 +58,7 @@ public partial class App : Application
         }
     }
 
+    // FIXED: Changed AppLifecycleEventArgs to WindowEventArgs
     protected override void OnClosed(object sender, WindowEventArgs e)
     {
         try
