@@ -1,0 +1,52 @@
+<Window
+    x:Class="TB.Core.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="TB">
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom Title Bar -->
+        <Grid x:Name="TitleBar" Background="{ThemeResource SystemControlAcrylicWindowBrush}" Padding="8,4" PointerPressed="TitleBar_PointerPressed">
+            <TextBlock Text="TB" FontSize="12" VerticalAlignment="Center" Margin="4,0,0,0"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="BtnMin" Content="─" Click="BtnMin_Click" Width="32" Height="24"/>
+                <Button x:Name="BtnMax" Content="☐" Click="BtnMax_Click" Width="32" Height="24"/>
+                <Button x:Name="BtnClose" Content="✕" Click="BtnClose_Click" Width="32" Height="24"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Navigation Bar -->
+        <Grid Grid.Row="1" Padding="8,4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0"/>
+            <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0"/>
+            <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0"/>
+            <AutoSuggestBox x:Name="Omnibox" Grid.Column="3" QueryIcon="Find" PlaceholderText="Search or enter web address" QuerySubmitted="Omnibox_QuerySubmitted"/>
+            <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click"/>
+        </Grid>
+
+        <!-- Tabs & WebView -->
+        <muxc:TabView x:Name="TabStrip" Grid.Row="2" AddTabButtonClick="TabStrip_AddTabButtonClick" TabCloseRequested="TabStrip_TabCloseRequested" TabItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}">
+            <muxc:TabView.TabStripHeader>
+                <Grid x:Name="TabDragRegion" Width="200"/>
+            </muxc:TabView.TabStripHeader>
+        </muxc:TabView>
+
+        <!-- Note: WebView2 is injected per-tab via code-behind in Phase 2. Phase 1 uses a single shared instance for simplicity -->
+        <wv2:WebView2 x:Name="BrowserView" Grid.Row="2" Margin="0,0,0,0"/>
+    </Grid>
+</Window>
