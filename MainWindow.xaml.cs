@@ -5,7 +5,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core; // Fixes CoreWebView2InitializationCompletedEventArgs
+using Microsoft.Web.WebView2.Core; // ADDED
 using TB_Browser.Services;
 using TB_Browser.ViewModels;
 
@@ -45,8 +45,7 @@ public sealed partial class MainWindow : Window
     private void OnCoreWebView2Init(CoreWebView2 sender, CoreWebView2InitializationCompletedEventArgs args)
     {
         var settings = App.Services!.GetRequiredService<SettingsService>().Settings;
-        if (settings.BlockThirdPartyCookies)
-            sender.CookieManager.DeleteAllCookies();
+        if (settings.BlockThirdPartyCookies) sender.CookieManager.DeleteAllCookies();
     }
 
     private void OnNavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
@@ -77,22 +76,16 @@ public sealed partial class MainWindow : Window
         AppTabView.SelectionChanged += (s, e) => _previousTab = ViewModel.SelectedTab;
     }
 
-    private void AppTabView_AddTabButtonClick(TabView sender, object args)
-    {
-        ViewModel.AddTab("https://www.google.com", "New Tab");
-    }
-
+    private void AppTabView_AddTabButtonClick(TabView sender, object args) => ViewModel.AddTab("https://www.google.com", "New Tab");
     private void AppTabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
-        if (args.Tab.DataContext is TabViewModel tab)
-            tab.CloseCommand.Execute(null);
+        if (args.Tab.DataContext is TabViewModel tab) tab.CloseCommand.Execute(null);
     }
 
     private void NavBtn_Click(object sender, RoutedEventArgs e)
     {
         if (BrowserWebView.CoreWebView2 == null) return;
-        var tag = (sender as Button)?.Tag?.ToString();
-        switch (tag)
+        switch ((sender as Button)?.Tag?.ToString())
         {
             case "Back": if (BrowserWebView.CanGoBack) BrowserWebView.GoBack(); break;
             case "Forward": if (BrowserWebView.CanGoForward) BrowserWebView.GoForward(); break;
@@ -105,28 +98,22 @@ public sealed partial class MainWindow : Window
         if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
             _ = ViewModel.NavigationViewModel.LoadSuggestionsCommand.ExecuteAsync(sender.Text);
     }
-
     private void AddressBar_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-        ViewModel.NavigationViewModel.AddressBarText = args.SelectedItem?.ToString() ?? string.Empty;
-    }
-
+        => ViewModel.NavigationViewModel.AddressBarText = args.SelectedItem?.ToString() ?? string.Empty;
     private void AddressBar_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var url = args.QueryText?.Trim();
         if (string.IsNullOrEmpty(url)) return;
         if (!url.StartsWith("http://") && !url.StartsWith("https://") && !url.Contains("."))
             url = $"https://www.google.com/search?q={Uri.EscapeDataString(url)}";
-        else if (!url.StartsWith("http"))
-            url = "https://" + url;
+        else if (!url.StartsWith("http")) url = "https://" + url;
         if (BrowserWebView.CoreWebView2 != null) BrowserWebView.Navigate(url);
     }
 
     private void WindowBtn_Click(object sender, RoutedEventArgs e)
     {
         if (_presenter == null) return;
-        var tag = (sender as Button)?.Tag?.ToString();
-        switch (tag)
+        switch ((sender as Button)?.Tag?.ToString())
         {
             case "Minimize": _presenter.Minimize(); break;
             case "Maximize": if (_presenter.State == OverlappedPresenterState.Maximized) _presenter.Restore(); else _presenter.Maximize(); break;
