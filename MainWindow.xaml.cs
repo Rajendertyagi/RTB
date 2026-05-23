@@ -5,7 +5,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core; // ADDED
+using Microsoft.Web.WebView2.Core; // FIXED: Added namespace
 using TB_Browser.Services;
 using TB_Browser.ViewModels;
 
