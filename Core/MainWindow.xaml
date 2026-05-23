@@ -6,34 +6,23 @@
         Height="600" 
         Width="1000"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
         ResizeMode="CanResize"
         Background="#F8F9FA">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="32" ResizeBorderThickness="4" GlassFrameThickness="0" UseAeroCaptionButtons="False" CornerRadius="0"/>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="4" GlassFrameThickness="0" UseAeroCaptionButtons="False" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <!-- ✅ PlaceholderTextBox Style - MUST be in Window.Resources -->
         <Style x:Key="PlaceholderTextBox" TargetType="{x:Type TextBox}">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TextBox}">
                         <Grid>
-                            <Border Background="{TemplateBinding Background}" 
-                                    BorderBrush="{TemplateBinding BorderBrush}" 
-                                    BorderThickness="{TemplateBinding BorderThickness}" 
-                                    CornerRadius="16"/>
-                            <ScrollViewer x:Name="PART_ContentHost" 
-                                         Margin="12,0" 
-                                         VerticalAlignment="Center"/>
-                            <TextBlock x:Name="PlaceholderText" 
-                                      Text="{TemplateBinding Tag}" 
-                                      Foreground="#888888" 
-                                      Margin="12,0" 
-                                      VerticalAlignment="Center" 
-                                      IsHitTestVisible="False">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="16"/>
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="12,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="PlaceholderText" Text="{TemplateBinding Tag}" Foreground="#888888" Margin="12,0" VerticalAlignment="Center" IsHitTestVisible="False">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -51,7 +40,6 @@
             </Setter>
         </Style>
 
-        <!-- Chrome TabControl Style -->
         <Style x:Key="ChromeTabControl" TargetType="{x:Type TabControl}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -69,18 +57,8 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TabPanel x:Name="HeaderPanel" 
-                                         Grid.Column="0" 
-                                         IsItemsHost="True" 
-                                         Margin="4,0,0,0"/>
-                                <Button Grid.Column="1" 
-                                       Content="+" 
-                                       Width="28" 
-                                       Height="28" 
-                                       Margin="4,0,8,0" 
-                                       Click="AddTab_Click"
-                                       FontSize="14"
-                                       FontWeight="Bold">
+                                <TabPanel x:Name="HeaderPanel" Grid.Column="0" IsItemsHost="True" Margin="4,0,0,0"/>
+                                <Button Grid.Column="1" Content="+" Width="28" Height="28" Margin="4,0,8,0" Click="AddTab_Click" FontSize="14" FontWeight="Bold">
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Background" Value="Transparent"/>
@@ -111,7 +89,7 @@
         </Grid.RowDefinitions>
 
         <!-- Custom Title Bar -->
-        <Border Grid.Row="0" Background="#E8EAED" WindowChrome.IsHitTestVisibleInChrome="True">
+        <Border Grid.Row="0" Background="#E8EAED" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -127,20 +105,10 @@
         </Border>
 
         <!-- Tab Strip -->
-        <TabControl x:Name="TabStrip" 
-                   Grid.Row="1" 
-                   ItemsSource="{Binding Tabs}" 
-                   SelectedItem="{Binding SelectedTab}" 
-                   SelectionChanged="TabStrip_SelectionChanged" 
-                   Style="{StaticResource ChromeTabControl}">
+        <TabControl x:Name="TabStrip" Grid.Row="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionChanged="TabStrip_SelectionChanged" Style="{StaticResource ChromeTabControl}">
             <TabControl.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Title}" 
-                              FontSize="12" 
-                              TextTrimming="CharacterEllipsis" 
-                              MaxWidth="150" 
-                              VerticalAlignment="Center" 
-                              Foreground="#3C4043"/>
+                    <TextBlock Text="{Binding Title, Mode=OneWay}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="150" VerticalAlignment="Center" Foreground="#3C4043"/>
                 </DataTemplate>
             </TabControl.ItemTemplate>
         </TabControl>
@@ -158,13 +126,7 @@
                 <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0" Width="32" Height="32"/>
                 <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0" Width="32" Height="32"/>
                 <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0" Width="32" Height="32"/>
-                <!-- ✅ Reference the style defined above -->
-                <TextBox x:Name="Omnibox" 
-                        Grid.Column="3" 
-                        Tag="Search or enter web address" 
-                        Style="{StaticResource PlaceholderTextBox}" 
-                        KeyDown="Omnibox_KeyDown" 
-                        Margin="0,0,8,0"/>
+                <TextBox x:Name="Omnibox" Grid.Column="3" Tag="Search or enter web address" Style="{StaticResource PlaceholderTextBox}" KeyDown="Omnibox_KeyDown" Margin="0,0,8,0"/>
                 <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click" Width="32" Height="32"/>
             </Grid>
         </Border>
