@@ -6,8 +6,6 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- Explicit WinUI generic theme merge (avoids XamlControlsResources validation bug in CI) -->
-                <ResourceDictionary Source="ms-appx:///Microsoft.UI.Xaml/Themes/generic.xaml" />
                 <ResourceDictionary Source="ms-appx:///UI/Styles/AppStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
