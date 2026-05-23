@@ -11,14 +11,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_CLI_UI_LANGUAGE: en
   CONFIGURATION: Release
   RUNTIME: win-x64
+  EnableWindowsTargeting: true
+  WindowsSdkPackageVersion: 10.0.26100.1742
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
-      - name: 📦 Checkout code
+      - name:  Checkout code
         uses: actions/checkout@v5
 
       - name: ⚙️ Setup .NET 10
@@ -30,12 +33,21 @@ jobs:
         run: dotnet restore
 
       - name: 🔨 Build & Publish (Framework-Dependent)
-        run: dotnet publish -c ${{ env.CONFIGURATION }} -r ${{ env.RUNTIME }} --self-contained false -o ./publish
+        run: >
+          dotnet publish
+          -c ${{ env.CONFIGURATION }}
+          -r ${{ env.RUNTIME }}
+          --self-contained false
+          -o ./publish
+          -p:EnableWindowsTargeting=true
+          -p:WindowsSdkPackageVersion=${{ env.WindowsSdkPackageVersion }}
+          -p:XamlDebug=true
+        shell: pwsh
 
       - name: 🧹 Strip Runtime & SDK Files for Minimal Build
         run: |
           cd publish
-          # Define exact files to KEEP (App + Managed NuGet deps + required JSON configs)
+          
           $keep = @(
             "TB-Browser.exe",
             "TB-Browser.dll",
@@ -52,14 +64,12 @@ jobs:
             "WebView2Loader.dll"
           )
           
-          # Remove everything else (WinAppSDK DLLs, .NET runtime DLLs, PDBs, XML docs, runtimes/)
           Get-ChildItem -Recurse | Where-Object { 
             -not ($keep -contains $_.Name) -and 
             -not ($_.Name -like "*.pdb") -and 
             -not ($_.Name -like "*.xml") 
           } | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
           
-          # Clean up empty directories
           Get-ChildItem -Directory -Recurse | Where-Object { $_.GetFileSystemInfos().Count -eq 0 } | Remove-Item -Force -Recurse
         shell: pwsh
 
