@@ -8,20 +8,16 @@
     <StackPanel Spacing="16">
         <TextBlock Text="Settings" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,0,0,8"/>
 
-        <!-- Theme -->
         <StackPanel Spacing="4">
             <TextBlock Text="Theme" Style="{StaticResource BodyStrongTextBlockStyle}"/>
             <ComboBox ItemsSource="{x:Bind ThemeOptions}" SelectedItem="{x:Bind ViewModel.Theme, Mode=TwoWay}" />
         </StackPanel>
 
-        <!-- Startup -->
         <StackPanel Spacing="4">
             <TextBlock Text="On Startup" Style="{StaticResource BodyStrongTextBlockStyle}"/>
             <ComboBox ItemsSource="{x:Bind StartupOptions}" SelectedItem="{x:Bind ViewModel.StartupMode, Mode=TwoWay}" />
-            <TextBox Header="Startup URL" Text="{x:Bind ViewModel.StartupUrl, Mode=TwoWay}" Visibility="{x:Bind ViewModel.StartupMode, Converter={StaticResource VisibilityConverter}, Mode=OneWay}" />
         </StackPanel>
 
-        <!-- Actions -->
         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
             <Button Content="Check for Updates" Command="{x:Bind ViewModel.CheckForUpdatesCommand}" />
             <Button Content="Save" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SaveSettingsCommand}" Click="CloseFlyout_Click"/>
