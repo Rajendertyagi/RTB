@@ -14,8 +14,8 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Custom Title Bar -->
-        <Grid x:Name="TitleBar" Background="{ThemeResource SystemControlAcrylicWindowBrush}" Padding="8,4" PointerPressed="TitleBar_PointerPressed">
+        <!-- Custom Title Bar (PointerPressed removed - handled natively by SetTitleBar) -->
+        <Grid x:Name="TitleBar" Background="{ThemeResource SystemControlAcrylicWindowBrush}" Padding="8,4">
             <TextBlock Text="TB" FontSize="12" VerticalAlignment="Center" Margin="4,0,0,0"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="BtnMin" Content="─" Click="BtnMin_Click" Width="32" Height="24"/>
@@ -47,7 +47,7 @@
             </muxc:TabView.TabStripHeader>
         </muxc:TabView>
 
-        <!-- WebView2 Host Container (Control injected in code-behind) -->
+        <!-- WebView2 Host -->
         <Grid x:Name="WebViewContainer" Grid.Row="2" />
     </Grid>
 </Window>
