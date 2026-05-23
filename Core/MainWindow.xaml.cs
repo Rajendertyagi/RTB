@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Microsoft.Web.WebView2.Wpf;
 using TB.Features;
 using TB.Features.Navigation;
@@ -14,11 +15,30 @@ public partial class MainWindow
 {
     public MainViewModel ViewModel { get; }
 
+    // Win32 interop
     [DllImport("user32.dll")]
     private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+    [DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+    // Constants
+    private const int WM_NCCALCSIZE = 0x83;
+    private const int GWL_STYLE = -16;
+    private const int WS_CAPTION = 0x00C00000;
+    private const int WS_THICKFRAME = 0x00040000;
     private const int WM_NCLBUTTONDOWN = 0xA1;
     private const int HTLEFT = 10, HTRIGHT = 11, HTTOP = 12, HTTOPLEFT = 13, HTTOPRIGHT = 14,
                       HTBOTTOM = 15, HTBOTTOMLEFT = 16, HTBOTTOMRIGHT = 17;
+    
+    // DWM constants
+    private const int DWMWA_NCRENDERING_POLICY = 3;
+    private const int DWMWA_BORDER_COLOR = 34;
+    private const int DWMWA_COLOR_NONE = -2; // 0xFFFFFFFE
+    private const int NCRP_DISABLED = 0;
 
     public MainWindow()
     {
@@ -27,6 +47,37 @@ public partial class MainWindow
         DataContext = ViewModel;
         Loaded += MainWindow_Loaded;
         Closed += MainWindow_Closed;
+        SourceInitialized += MainWindow_SourceInitialized;
+    }
+
+    private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var source = HwndSource.FromHwnd(hwnd);
+        source?.AddHook(WndProc);
+
+        // ✅ Official DWM method: Disable non-client rendering
+        int policy = NCRP_DISABLED;
+        DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, ref policy, sizeof(int));
+
+        // ✅ Windows 11: Suppress border drawing
+        int borderColor = DWMWA_COLOR_NONE;
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+
+        // ✅ Fallback: Remove caption style (for older Windows)
+        int style = GetWindowLong(hwnd, GWL_STYLE);
+        SetWindowLong(hwnd, GWL_STYLE, style & ~WS_CAPTION);
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        // ✅ Official method: Handle WM_NCCALCSIZE to remove standard frame [[customframe]]
+        if (msg == WM_NCCALCSIZE && wParam.ToInt32() == 1)
+        {
+            handled = true;
+            return IntPtr.Zero; // Return 0 to use full window as client area
+        }
+        return IntPtr.Zero;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -125,7 +176,7 @@ public partial class MainWindow
         }
     }
     private void DragResize(int direction) =>
-        SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, WM_NCLBUTTONDOWN, direction, 0);
+        SendMessage(new WindowInteropHelper(this).Handle, WM_NCLBUTTONDOWN, direction, 0);
 
     private void MainWindow_Closed(object? sender, EventArgs e) => BrowserView?.Dispose();
     private void OpenSettings_Click(object sender, RoutedEventArgs e) { /* Phase 3 */ }
