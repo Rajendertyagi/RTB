@@ -19,17 +19,18 @@ jobs:
 
       - name: Clean & Restore
         run: |
-          Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force obj, bin, publish -ErrorAction SilentlyContinue
           dotnet restore
 
-      # ✅ Fix: Added -r win-x64 to match output path in copy step
       - name: Build
         run: dotnet build TB.csproj --configuration Release --no-restore -r win-x64
 
-      - name: Copy Build Output
+      - name: Copy Build Output (Exclude ZIPs)
         run: |
           New-Item -ItemType Directory -Force -Path ./publish
-          Copy-Item -Recurse -Force ./bin/Release/net10.0-windows/win-x64/* ./publish/
+          # ✅ Copy only necessary files, explicitly exclude any existing .zip files
+          Get-ChildItem -Path ./bin/Release/net10.0-windows/win-x64 -Exclude *.zip | 
+            Copy-Item -Destination ./publish -Recurse -Force
 
       - name: Create ZIP
         run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
