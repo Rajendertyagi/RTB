@@ -31,26 +31,50 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: 📥 Restore Workloads & Dependencies
+      - name: 📥 Install Windows Desktop Workload & Restore
         run: |
-          dotnet workload restore
+          dotnet workload install windows-desktop
           dotnet restore
         shell: pwsh
 
-      # ⚠️ BUILD & PUBLISH DISABLED TEMPORARILY
-      # Unpackaged WinUI 3 + .NET 10 XAML compiler fails in GitHub CI.
-      # Uncomment the block below once local builds succeed.
-      #
-      # - name: 🔨 Build & Publish
-      #   run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish -p:EnableWindowsTargeting=true
-      #
-      # - name: 🧹 Strip & Zip
-      #   run: Compress-Archive -Path publish\* -DestinationPath TB-Browser-Minimal.zip -Force
-      #
-      # - name: 📤 Upload Artifact
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: TB-Browser-Minimal
-      #     path: TB-Browser-Minimal.zip
-      #     if-no-files-found: error
-      #     retention-days: 30
+      - name: 🧹 Force Clean Stale Artifacts
+        run: |
+          Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue
+          dotnet clean -c ${{ env.CONFIGURATION }}
+        shell: pwsh
+
+      - name: 🔨 Build & Publish (Framework-Dependent)
+        run: >
+          dotnet publish
+          -c ${{ env.CONFIGURATION }}
+          -r ${{ env.RUNTIME }}
+          --self-contained false
+          -p:SelfContained=false
+          -p:PublishSingleFile=false
+          -p:PublishTrimmed=false
+          -p:EnableWindowsTargeting=true
+          -p:WindowsPackageType=None
+          -p:AllowUnsafeBlocks=true
+          -p:GenerateLibraryLayout=false
+          -o ./publish
+        shell: pwsh
+
+      - name: 🧹 Strip Debug Files & Unused Runtimes
+        run: |
+          Set-Location ./publish
+          # Remove only safe-to-delete files without breaking WinUI 3 XAML/WinRT loading
+          Get-ChildItem -Recurse -Include *.pdb, *.xml, *.dev.json, *.nuspec | Remove-Item -Force -ErrorAction SilentlyContinue
+          Remove-Item -Recurse -Force runtimes -ErrorAction SilentlyContinue
+        shell: pwsh
+
+      - name: 📦 Create Minimal Zip
+        run: Compress-Archive -Path publish\* -DestinationPath TB-Browser-Minimal.zip -Force
+        shell: pwsh
+
+      - name: 📤 Upload Minimal Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: TB-Browser-Minimal
+          path: TB-Browser-Minimal.zip
+          if-no-files-found: error
+          retention-days: 30
