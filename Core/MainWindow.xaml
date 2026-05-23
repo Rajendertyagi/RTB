@@ -1,193 +1,152 @@
-<Window x:Class="TB.Core.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        mc:Ignorable="d"
-        Title="TB" Height="600" Width="1000"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        ResizeMode="NoResize"
-        AllowsTransparency="True"
-        Background="Transparent"
-        SnapsToDevicePixels="True" UseLayoutRounding="True">
+using System;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interop;
+using Microsoft.Web.WebView2.Wpf;
+using TB.Features;
+using TB.Features.Navigation;
+using TB.Features.Tabs;
 
-    <Window.Resources>
-        <!-- Placeholder TextBox Style -->
-        <Style x:Key="PlaceholderTextBox" TargetType="{x:Type TextBox}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TextBox}">
-                        <Grid>
-                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="16"/>
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="12,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="PlaceholderText" Text="{TemplateBinding Tag}" Foreground="#888888" Margin="12,0" VerticalAlignment="Center" IsHitTestVisible="False" FontFamily="{StaticResource DefaultFont}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+namespace TB.Core;
 
-        <!-- Chrome TabItem Style -->
-        <Style x:Key="ChromeTabItem" TargetType="{x:Type TabItem}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TabItem}">
-                        <Grid Margin="1,0,1,0">
-                            <Border x:Name="Border" Background="Transparent" CornerRadius="6,6,0,0">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <ContentPresenter x:Name="Content" ContentSource="Header" Margin="12,5,4,5" VerticalAlignment="Center"/>
-                                    <Button x:Name="CloseBtn" Grid.Column="1" Content="✕" Width="16" Height="16" FontSize="9" Padding="0" Margin="0,0,4,0" Visibility="Collapsed" Click="TabClose_Click">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="Foreground" Value="#555555"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TabItem}}" Value="True">
-                                                        <Setter Property="Visibility" Value="Visible"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                </Grid>
-                            </Border>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#FFFFFF"/>
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#DDDDDD"/>
-                                <Setter TargetName="Border" Property="BorderThickness" Value="1,1,1,0"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#F1F3F4"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+public partial class MainWindow
+{
+    public MainViewModel ViewModel { get; }
 
-        <!-- Chrome TabControl Style with + Button -->
-        <Style x:Key="ChromeTabControl" TargetType="{x:Type TabControl}">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="4,0,0,0"/>
-            <Setter Property="ItemContainerStyle" Value="{StaticResource ChromeTabItem}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type TabControl}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Background="#E8EAED">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TabPanel x:Name="HeaderPanel" Grid.Column="0" IsItemsHost="True" Margin="4,0,0,0" Panel.ZIndex="1"/>
-                                <Button Grid.Column="1" Content="＋" Width="28" Height="28" Margin="4,0,8,0" Click="AddTab_Click" ToolTip="New tab (Ctrl+T)">
-                                    <Button.Style>
-                                        <Style TargetType="Button">
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Foreground" Value="#555555"/>
-                                            <Setter Property="FontSize" Value="14"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="#DADCE0"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                            </Grid>
-                            <ContentPresenter x:Name="PART_SelectedContentHost" Grid.Row="1" ContentSource="SelectedContent"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </Window.Resources>
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+    
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    
+    [DllImport("user32.dll")]
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-    <Grid>
-        <!-- Invisible Resize Border -->
-        <Border BorderThickness="4" BorderBrush="Transparent" MouseLeftButtonDown="ResizeBorder_MouseLeftButtonDown" Grid.RowSpan="4" Panel.ZIndex="0"/>
+    private const int WM_NCLBUTTONDOWN = 0xA1;
+    private const int GWL_STYLE = -16;
+    private const int WS_CAPTION = 0x00C00000;
+    private const int WS_THICKFRAME = 0x00040000;
+    private const int HTLEFT = 10, HTRIGHT = 11, HTTOP = 12, HTTOPLEFT = 13, HTTOPRIGHT = 14,
+                      HTBOTTOM = 15, HTBOTTOMLEFT = 16, HTBOTTOMRIGHT = 17;
 
-        <!-- Content Grid -->
-        <Grid Margin="4" Panel.ZIndex="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="32"/> <!-- Title Bar -->
-                <RowDefinition Height="Auto"/> <!-- Tab Strip -->
-                <RowDefinition Height="Auto"/> <!-- Navigation Bar -->
-                <RowDefinition Height="*"/>    <!-- WebView2 -->
-            </Grid.RowDefinitions>
+    public MainWindow()
+    {
+        InitializeComponent();
+        ViewModel = new MainViewModel(new TabService(), new NavigationViewModel());
+        DataContext = ViewModel;
+        Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
+        SourceInitialized += MainWindow_SourceInitialized;
+    }
 
-            <!-- Custom Title Bar -->
-            <Border Grid.Row="0" Background="#E8EAED" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Foreground="#3C4043"/>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <Button Content="─" Width="46" Height="32" Click="BtnMin_Click" Background="Transparent" BorderThickness="0" FontSize="14" Foreground="#3C4043"/>
-                        <Button Content="☐" Width="46" Height="32" Click="BtnMax_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
-                        <Button Content="✕" Width="46" Height="32" Click="BtnClose_Click" Background="Transparent" BorderThickness="0" FontSize="12" Foreground="#3C4043"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
+    private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        // ✅ Force remove native title bar using Win32 API
+        var hwnd = new WindowInteropHelper(this).Handle;
+        int style = GetWindowLong(hwnd, GWL_STYLE);
+        SetWindowLong(hwnd, GWL_STYLE, style & ~WS_CAPTION);
+    }
 
-            <!-- Chrome-like Tabs -->
-            <TabControl x:Name="TabStrip" Grid.Row="1" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionChanged="TabStrip_SelectionChanged" Style="{StaticResource ChromeTabControl}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Title}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="150" VerticalAlignment="Center" Foreground="#3C4043"/>
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
-            </TabControl>
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        await BrowserView.EnsureCoreWebView2Async();
+        if (BrowserView.CoreWebView2 != null && ViewModel.SelectedTab != null)
+        {
+            BrowserView.CoreWebView2.SourceChanged += CoreWebView2_SourceChanged;
+            BrowserView.CoreWebView2.Navigate(ViewModel.SelectedTab.Url);
+            BrowserView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
+        }
+    }
 
-            <!-- Navigation Bar -->
-            <Border Grid.Row="2" Background="#FFFFFF" Padding="8,6" BorderBrush="#E8EAED" BorderThickness="0,0,0,1">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="◀" Click="GoBack_Click" Margin="0,0,4,0" Width="32" Height="32"/>
-                    <Button Grid.Column="1" Content="▶" Click="GoForward_Click" Margin="0,0,4,0" Width="32" Height="32"/>
-                    <Button Grid.Column="2" Content="⟳" Click="Reload_Click" Margin="0,0,8,0" Width="32" Height="32"/>
-                    <TextBox x:Name="Omnibox" Grid.Column="3" Tag="Search or enter web address" Style="{StaticResource PlaceholderTextBox}" KeyDown="Omnibox_KeyDown" Margin="0,0,8,0"/>
-                    <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click" Width="32" Height="32"/>
-                </Grid>
-            </Border>
+    private void CoreWebView2_SourceChanged(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e)
+    {
+        if (BrowserView.CoreWebView2?.Source != null)
+            Omnibox.Text = BrowserView.CoreWebView2.Source;
+    }
 
-            <!-- WebView2 -->
-            <Grid Grid.Row="3">
-                <wv2:WebView2 x:Name="BrowserView" Margin="0,0,0,0" />
-            </Grid>
-        </Grid>
-    </Grid>
-</Window>
+    private void CoreWebView2_NavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
+    {
+        if (ViewModel.SelectedTab != null && BrowserView.CoreWebView2 != null)
+        {
+            ViewModel.SelectedTab.Title = string.IsNullOrEmpty(BrowserView.CoreWebView2.DocumentTitle)
+                ? ViewModel.SelectedTab.Url
+                : BrowserView.CoreWebView2.DocumentTitle;
+        }
+    }
+
+    private async void TabStrip_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (BrowserView.CoreWebView2 == null || e.AddedItems.Count == 0) return;
+        if (e.AddedItems[0] is TabViewModel tab)
+        {
+            await BrowserView.EnsureCoreWebView2Async();
+            BrowserView.CoreWebView2.Navigate(tab.Url);
+        }
+    }
+
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left) DragMove();
+    }
+    private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+    private void BtnMax_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
+    private void AddTab_Click(object sender, RoutedEventArgs e) => ViewModel.AddTab();
+    private void TabClose_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn)
+        {
+            if (btn.DataContext is TabViewModel tab) { tab.Close(); return; }
+            if (btn.TemplatedParent is ContentPresenter cp && cp.DataContext is TabViewModel tab2) { tab2.Close(); return; }
+        }
+        if (sender is TabItem ti && ti.DataContext is TabViewModel tab3) tab3.Close();
+    }
+
+    private void GoBack_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoBack();
+    private void GoForward_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoForward();
+    private void Reload_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.Reload();
+
+    private void Omnibox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || sender is not TextBox tb) return;
+        var query = tb.Text?.Trim();
+        if (string.IsNullOrEmpty(query)) return;
+
+        var url = query.Contains(".") && !query.StartsWith("http")
+            ? $"https://{query}"
+            : $"https://www.google.com/search?q={Uri.EscapeDataString(query)}";
+        BrowserView.CoreWebView2?.Navigate(url);
+        tb.Text = url;
+    }
+
+    private void ResizeBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left && sender is Border)
+        {
+            var pos = e.GetPosition(this);
+            var (w, h, t) = (ActualWidth, ActualHeight, 4.0);
+            if (pos.X <= t)
+            {
+                if (pos.Y <= t) DragResize(HTTOPLEFT);
+                else if (pos.Y >= h - t) DragResize(HTBOTTOMLEFT);
+                else DragResize(HTLEFT);
+            }
+            else if (pos.X >= w - t)
+            {
+                if (pos.Y <= t) DragResize(HTTOPRIGHT);
+                else if (pos.Y >= h - t) DragResize(HTBOTTOMRIGHT);
+                else DragResize(HTRIGHT);
+            }
+            else if (pos.Y <= t) DragResize(HTTOP);
+            else if (pos.Y >= h - t) DragResize(HTBOTTOM);
+        }
+    }
+    private void DragResize(int direction) =>
+        SendMessage(new System.Windows.Interop.WindowInteropHelper(this).Handle, WM_NCLBUTTONDOWN, direction, 0);
+
+    private void MainWindow_Closed(object? sender, EventArgs e) => BrowserView?.Dispose();
+    private void OpenSettings_Click(object sender, RoutedEventArgs e) { /* Phase 3 */ }
+}
