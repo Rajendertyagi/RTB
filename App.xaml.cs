@@ -1,15 +1,23 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using TB.Services;
+using TB.ViewModels;
 
-namespace TestWinUI3;
+namespace TB;
 
 public partial class App : Application
 {
-    public App() { InitializeComponent(); }
+    public static IServiceProvider Services { get; } = new ServiceCollection()
+        .AddSingleton<WebViewService>()
+        .AddSingleton<TabStateManager>()
+        .AddSingleton<NavigationViewModel>()
+        .AddSingleton<MainViewModel>()
+        .BuildServiceProvider();
 
-    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    public App() => InitializeComponent();
+
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        // Required for unpackaged WinUI 3 dynamic dependencies
-        Microsoft.Windows.ApplicationModel.DynamicDependency.Bootstrap.Initialize(0x00010001);
         var window = new MainWindow();
         window.Activate();
     }
