@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:wv2="using:Microsoft.Web.WebView2.WinUI"
     mc:Ignorable="d"
     Title="TB">
     <Grid x:Name="RootGrid">
@@ -39,14 +41,14 @@
             <Button Grid.Column="4" Content="⋮" Click="OpenSettings_Click"/>
         </Grid>
 
-        <!-- Tabs & WebView -->
-        <muxc:TabView x:Name="TabStrip" Grid.Row="2" AddTabButtonClick="TabStrip_AddTabButtonClick" TabCloseRequested="TabStrip_TabCloseRequested" TabItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}">
+        <!-- Tabs -->
+        <muxc:TabView x:Name="TabStrip" Grid.Row="2" AddTabButtonClick="TabStrip_AddTabButtonClick" TabCloseRequested="TabStrip_TabCloseRequested">
             <muxc:TabView.TabStripHeader>
                 <Grid x:Name="TabDragRegion" Width="200"/>
             </muxc:TabView.TabStripHeader>
         </muxc:TabView>
 
-        <!-- Note: WebView2 is injected per-tab via code-behind in Phase 2. Phase 1 uses a single shared instance for simplicity -->
+        <!-- WebView2 (Phase 1: single shared instance) -->
         <wv2:WebView2 x:Name="BrowserView" Grid.Row="2" Margin="0,0,0,0"/>
     </Grid>
 </Window>
