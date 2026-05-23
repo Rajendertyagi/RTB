@@ -8,13 +8,9 @@
         Title="TB" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
-        ResizeMode="CanResize"
+        ResizeMode="CanResizeWithGrip"
+        AllowsTransparency="True"
         Background="{DynamicResource ControlFillColorDefaultBrush}">
-    
-    <WindowChrome.WindowChrome>
-        <!-- ✅ CaptionHeight=0 hides native bar; ResizeBorderThickness enables edge resize -->
-        <WindowChrome CaptionHeight="0" ResizeBorderThickness="8" GlassFrameThickness="0" UseAeroCaptionButtons="False"/>
-    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <!-- Placeholder TextBox style -->
@@ -43,7 +39,7 @@
             </Setter>
         </Style>
 
-        <!-- ✅ Chrome-like TabItem template -->
+        <!-- Chrome-like TabItem template -->
         <Style x:Key="ChromeTabItem" TargetType="{x:Type TabItem}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -87,7 +83,7 @@
             </Setter>
         </Style>
 
-        <!-- ✅ Chrome-like TabControl with Add button -->
+        <!-- Chrome-like TabControl with Add button -->
         <Style x:Key="ChromeTabControl" TargetType="{x:Type TabControl}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -139,18 +135,20 @@
         </Grid.RowDefinitions>
 
         <!-- Custom Title Bar (drag region) -->
-        <Grid Grid.Row="0" Background="{DynamicResource ControlFillColorDefaultBrush}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="─" Width="40" Height="32" Click="BtnMin_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
-                <Button Content="☐" Width="40" Height="32" Click="BtnMax_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
-                <Button Content="✕" Width="40" Height="32" Click="BtnClose_Click" WindowChrome.IsHitTestVisibleInChrome="True" Background="Transparent" BorderThickness="0"/>
-            </StackPanel>
-        </Grid>
+        <Border Grid.Row="0" Background="{DynamicResource ControlFillColorDefaultBrush}" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="─" Width="46" Height="32" Click="BtnMin_Click" Background="Transparent" BorderThickness="0" FontSize="14"/>
+                    <Button Content="☐" Width="46" Height="32" Click="BtnMax_Click" Background="Transparent" BorderThickness="0" FontSize="12"/>
+                    <Button Content="✕" Width="46" Height="32" Click="BtnClose_Click" Background="Transparent" BorderThickness="0" FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <!-- Navigation Bar -->
         <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}" Padding="8,6" BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
@@ -172,13 +170,7 @@
 
         <!-- Chrome-like Tabs + WebView2 -->
         <Grid Grid.Row="2">
-            <TabControl x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionChanged="TabStrip_SelectionChanged" Style="{StaticResource ChromeTabControl}">
-                <TabControl.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Title}" FontSize="12" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
-                    </DataTemplate>
-                </TabControl.ItemTemplate>
-            </TabControl>
+            <TabControl x:Name="TabStrip" ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}" SelectionChanged="TabStrip_SelectionChanged" Style="{StaticResource ChromeTabControl}"/>
             <wv2:WebView2 x:Name="BrowserView" Margin="0,0,0,0" />
         </Grid>
     </Grid>
