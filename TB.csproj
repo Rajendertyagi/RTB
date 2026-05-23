@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>14</LangVersion>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- ✅ Disable auto-generated Program.cs to use our custom one -->
+    <!-- ✅ Disable compiled bindings to prevent AVLN2100 parse errors -->
+    <AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
