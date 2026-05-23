@@ -5,7 +5,7 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core; // FIXED: Added namespace
+using Microsoft.Web.WebView2.Core; // ADDED: Fixes CS0246
 using TB_Browser.Services;
 using TB_Browser.ViewModels;
 
@@ -16,7 +16,6 @@ public sealed partial class MainWindow : Window
     public MainViewModel ViewModel { get; }
     private AppWindow? _appWindow;
     private OverlappedPresenter? _presenter;
-    private TabViewModel? _previousTab;
 
     public MainWindow()
     {
@@ -27,6 +26,7 @@ public sealed partial class MainWindow : Window
         _appWindow = this.AppWindow;
         _presenter = _appWindow?.Presenter as OverlappedPresenter;
         Loaded += MainWindow_Loaded;
+        Closed += MainWindow_Closed;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -34,18 +34,15 @@ public sealed partial class MainWindow : Window
         await BrowserWebView.EnsureCoreWebView2Async();
         BrowserWebView.NavigationStarting += OnNavigationStarting;
         BrowserWebView.NavigationCompleted += OnNavigationCompleted;
-        BrowserWebView.CoreWebView2InitializationCompleted += OnCoreWebView2Init;
-        BrowserWebView.KeyDown += OnWebViewKeyDown;
         var settingsService = App.Services!.GetRequiredService<SettingsService>();
         await settingsService.LoadAsync();
         ViewModel.InitializeTabs();
-        SetupTabSuspension();
     }
 
-    private void OnCoreWebView2Init(CoreWebView2 sender, CoreWebView2InitializationCompletedEventArgs args)
+    private void MainWindow_Closed(object sender, WindowEventArgs e)
     {
-        var settings = App.Services!.GetRequiredService<SettingsService>().Settings;
-        if (settings.BlockThirdPartyCookies) sender.CookieManager.DeleteAllCookies();
+        App.Services?.GetService<BookmarkService>()?.FlushAsync().Wait();
+        App.Services?.GetService<HistoryService>()?.FlushAsync().Wait();
     }
 
     private void OnNavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
@@ -65,41 +62,12 @@ public sealed partial class MainWindow : Window
         ViewModel.NavigationViewModel.AddressBarText = sender.Source;
     }
 
-    private void OnWebViewKeyDown(object sender, KeyRoutedEventArgs e)
-    {
-        if (e.Key == Windows.System.VirtualKey.F12 && BrowserWebView.CoreWebView2 != null)
-            BrowserWebView.CoreWebView2.OpenDevToolsWindow();
-    }
-
-    private void SetupTabSuspension()
-    {
-        AppTabView.SelectionChanged += (s, e) => _previousTab = ViewModel.SelectedTab;
-    }
-
     private void AppTabView_AddTabButtonClick(TabView sender, object args) => ViewModel.AddTab("https://www.google.com", "New Tab");
     private void AppTabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
     {
         if (args.Tab.DataContext is TabViewModel tab) tab.CloseCommand.Execute(null);
     }
 
-    private void NavBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (BrowserWebView.CoreWebView2 == null) return;
-        switch ((sender as Button)?.Tag?.ToString())
-        {
-            case "Back": if (BrowserWebView.CanGoBack) BrowserWebView.GoBack(); break;
-            case "Forward": if (BrowserWebView.CanGoForward) BrowserWebView.GoForward(); break;
-            case "Refresh": BrowserWebView.Reload(); break;
-        }
-    }
-
-    private void AddressBar_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-    {
-        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
-            _ = ViewModel.NavigationViewModel.LoadSuggestionsCommand.ExecuteAsync(sender.Text);
-    }
-    private void AddressBar_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
-        => ViewModel.NavigationViewModel.AddressBarText = args.SelectedItem?.ToString() ?? string.Empty;
     private void AddressBar_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var url = args.QueryText?.Trim();
@@ -108,16 +76,5 @@ public sealed partial class MainWindow : Window
             url = $"https://www.google.com/search?q={Uri.EscapeDataString(url)}";
         else if (!url.StartsWith("http")) url = "https://" + url;
         if (BrowserWebView.CoreWebView2 != null) BrowserWebView.Navigate(url);
-    }
-
-    private void WindowBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (_presenter == null) return;
-        switch ((sender as Button)?.Tag?.ToString())
-        {
-            case "Minimize": _presenter.Minimize(); break;
-            case "Maximize": if (_presenter.State == OverlappedPresenterState.Maximized) _presenter.Restore(); else _presenter.Maximize(); break;
-            case "Close": Close(); break;
-        }
     }
 }
