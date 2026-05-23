@@ -1,6 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:webview="using:Avalonia.WebView2"
+        xmlns:webview="using:Avalonia.Controls.WebView"
         x:Class="TB.MainWindow"
         Title="TB"
         Width="1000" Height="600"
@@ -72,7 +72,8 @@
                                                    FontSize="9" 
                                                    Padding="0" 
                                                    Margin="0,0,4,0"
-                                                   IsVisible="False">
+                                                   IsVisible="False"
+                                                   Click="TabClose_Click">
                                                 <Button.Styles>
                                                     <Style Selector="Button">
                                                         <Setter Property="Background" Value="Transparent"/>
@@ -168,7 +169,7 @@
             </Grid>
         </Border>
 
-        <!-- WebView2 -->
+        <!-- WebView2 Control -->
         <webview:WebView x:Name="BrowserView" Grid.Row="3" Margin="0,0,0,0"/>
     </Grid>
 </Window>
