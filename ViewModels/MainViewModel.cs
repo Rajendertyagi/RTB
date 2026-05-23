@@ -10,24 +10,29 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly TabService _tabService;
     private readonly TabViewModel _newTabVm;
+    
+    // ✅ FIX MVVMTK0014: Use _lowerCamel for private fields, no [ObservableProperty] on DI deps
+    private readonly NavigationViewModel _navigationViewModel;
+    private readonly SettingsViewModel _settingsViewModel;
 
     [ObservableProperty] private TabViewModel? _selectedTab;
-    [ObservableProperty] public NavigationViewModel NavigationViewModel;
-    [ObservableProperty] public SettingsViewModel SettingsViewModel;
 
     public ObservableCollection<TabViewModel> Tabs { get; } = new();
+    
+    // ✅ Expose as regular properties (no source generation needed)
+    public NavigationViewModel NavigationViewModel => _navigationViewModel;
+    public SettingsViewModel SettingsViewModel => _settingsViewModel;
 
-    public MainViewModel(NavigationViewModel navVm, SettingsViewModel settingsVm, TabService tabService)
+    public MainViewModel(NavigationViewModel navigationViewModel, SettingsViewModel settingsViewModel, TabService tabService)
     {
-        NavigationViewModel = navVm;
-        SettingsViewModel = settingsVm;
+        _navigationViewModel = navigationViewModel;
+        _settingsViewModel = settingsViewModel;
         _tabService = tabService;
         _newTabVm = new TabViewModel("https://www.google.com", "New Tab", _tabService);
     }
 
     public void InitializeTabs()
     {
-        // ✅ FIX CS8625: Use string.Empty instead of null literal
         AddTab(string.Empty, string.Empty);
     }
 
