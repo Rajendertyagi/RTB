@@ -7,19 +7,38 @@ env:
 
 jobs:
   build:
-    runs-on: windows-latest  # ✅ Critical: windows-2022 lacks MSIX build tools
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
       - uses: actions/setup-dotnet@v5
         with: { dotnet-version: '10.0.x' }
-      
-      # ✅ Install missing MSIX packaging tools required by WinUI 3
-      - name: Setup MSBuild Tools
-        uses: microsoft/setup-msbuild@v2
-        with: { vs-version: '[17.10,18.0)' }
-      
-      - run: Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue; dotnet restore
-      - run: dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=false -p:PublishTrimmed=false -p:WindowsPackageType=None -p:AppxPackage=false -o ./publish
-      - run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
+
+      - name: Clean & Restore
+        run: |
+          Remove-Item -Recurse -Force obj, bin -ErrorAction SilentlyContinue
+          dotnet restore
+
+      - name: Publish Unpackaged WinUI 3
+        run: >
+          dotnet publish -c Release -r win-x64 --self-contained false
+          -p:WindowsPackageType=None
+          -p:EnableMsixTooling=false
+          -p:DisableWinUIXamlDiagnostics=true
+          -p:GenerateProjectPriFile=false
+          -p:AppxPackage=false
+          -p:PublishSingleFile=false
+          -p:PublishTrimmed=false
+          -o ./publish
+
+      - name: Create ZIP
+        run: Compress-Archive -Path publish\* -DestinationPath TB-Portable.zip -Force
+
       - uses: actions/upload-artifact@v7
-        with: { name: TB-Portable, path: TB-Portable.zip, retention-days: 14 }
+        with:
+          name: TB-Portable
+          path: TB-Portable.zip
+          retention-days: 14
