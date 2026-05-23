@@ -11,13 +11,10 @@
     <UseWinUI>true</UseWinUI>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
 
-    <!-- ✅ Official Unpackaged CI Properties -->
+    <!-- ✅ Official Unpackaged App Properties -->
     <WindowsPackageType>None</WindowsPackageType>
-    <DisableMsixProjectCapabilityCheck>true</DisableMsixProjectCapabilityCheck>
     <EnableMsixTooling>false</EnableMsixTooling>
     <DisableWinUIXamlDiagnostics>true</DisableWinUIXamlDiagnostics>
-    <GenerateProjectPriFile>false</GenerateProjectPriFile>
-    <AppxPackage>false</AppxPackage>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,14 +36,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-
-  <!-- ✅ Official MSBuild Target Override: Removes ExpandPriContent before evaluation -->
-  <Target Name="DisablePriGeneration" BeforeTargets="GenerateProjectPriFile">
-    <PropertyGroup>
-      <GenerateProjectPriFile>false</GenerateProjectPriFile>
-    </PropertyGroup>
-    <ItemGroup>
-      <_GenerateProjectPriFileDependsOn Remove="ExpandPriContent" />
-    </ItemGroup>
-  </Target>
 </Project>
