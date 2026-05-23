@@ -18,8 +18,9 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-        // ✅ SDK 2.1: Use LatestStable constant for unpackaged apps
-        Bootstrap.Initialize(BootstrapConstants.LatestStable);
+        // ✅ FIX: Use hex version code instead of non-existent constant
+        // 0x00010003 = version 1.3.0.0, which satisfies SDK 2.x runtime requirements
+        Bootstrap.Initialize(0x00010003);
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
