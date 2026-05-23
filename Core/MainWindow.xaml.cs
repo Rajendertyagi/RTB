@@ -31,13 +31,19 @@ public partial class MainWindow
         }
     }
 
-    private void CoreWebView2_SourceChanged(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e) =>
-        Omnibox.Text = BrowserView.CoreWebView2?.Source ?? string.Empty;
+    private void CoreWebView2_SourceChanged(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2SourceChangedEventArgs e)
+    {
+        if (BrowserView.CoreWebView2?.Source != null)
+            Omnibox.Text = BrowserView.CoreWebView2.Source;
+    }
 
     private void CoreWebView2_NavigationCompleted(object? sender, Microsoft.Web.WebView2.Core.CoreWebView2NavigationCompletedEventArgs e)
     {
         if (ViewModel.SelectedTab != null && BrowserView.CoreWebView2 != null)
-            ViewModel.SelectedTab.Title = string.IsNullOrEmpty(BrowserView.CoreWebView2.DocumentTitle) ? "Google" : BrowserView.CoreWebView2.DocumentTitle;
+        {
+            var title = BrowserView.CoreWebView2.DocumentTitle;
+            ViewModel.SelectedTab.Title = string.IsNullOrEmpty(title) ? "Google" : title;
+        }
     }
 
     private async void TabStrip_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -50,13 +56,22 @@ public partial class MainWindow
         }
     }
 
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left) DragMove();
+    }
     private void BtnMin_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
     private void BtnMax_Click(object sender, RoutedEventArgs e) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
     private void BtnClose_Click(object sender, RoutedEventArgs e) => Close();
+
     private void AddTab_Click(object sender, RoutedEventArgs e) => ViewModel.AddTab();
     private void TabClose_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.DataContext is TabViewModel tab) tab.Close();
+        if (sender is Button btn)
+        {
+            if (btn.DataContext is TabViewModel tab) { tab.Close(); return; }
+            if (btn.TemplatedParent is ContentPresenter cp && cp.DataContext is TabViewModel tab2) { tab2.Close(); return; }
+        }
     }
     private void GoBack_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoBack();
     private void GoForward_Click(object sender, RoutedEventArgs e) => BrowserView.CoreWebView2?.GoForward();
