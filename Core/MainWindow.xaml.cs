@@ -15,7 +15,6 @@ public partial class MainWindow
 {
     public MainViewModel ViewModel { get; }
 
-    // Win32 DWM interop
     [DllImport("user32.dll")]
     private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
     [DllImport("user32.dll")]
@@ -24,12 +23,17 @@ public partial class MainWindow
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
     [DllImport("dwmapi.dll", PreserveSig = true)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmExtendFrameIntoClientArea(IntPtr hwnd, ref MARGINS margins);
 
-    // Constants
     private const int WM_NCCALCSIZE = 0x83;
     private const int GWL_STYLE = -16;
+    private const int GWL_EXSTYLE = -20;
     private const int WS_CAPTION = 0x00C00000;
     private const int WS_THICKFRAME = 0x00040000;
+    private const int WS_SYSMENU = 0x00080000;
+    private const int WS_MINIMIZEBOX = 0x00020000;
+    private const int WS_MAXIMIZEBOX = 0x00010000;
     private const int WM_NCLBUTTONDOWN = 0xA1;
     private const int HTLEFT = 10, HTRIGHT = 11, HTTOP = 12, HTTOPLEFT = 13, HTTOPRIGHT = 14,
                       HTBOTTOM = 15, HTBOTTOMLEFT = 16, HTBOTTOMRIGHT = 17;
@@ -37,6 +41,15 @@ public partial class MainWindow
     private const int DWMWA_BORDER_COLOR = 34;
     private const int DWMWA_COLOR_NONE = -2;
     private const int NCRP_DISABLED = 0;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MARGINS
+    {
+        public int cxLeftWidth;
+        public int cxRightWidth;
+        public int cyTopHeight;
+        public int cyBottomHeight;
+    }
 
     public MainWindow()
     {
@@ -54,17 +67,27 @@ public partial class MainWindow
         var source = HwndSource.FromHwnd(hwnd);
         source?.AddHook(WndProc);
 
-        // Remove native caption using Win32 API
+        // Remove ALL window styles that create frame
         int style = GetWindowLong(hwnd, GWL_STYLE);
-        SetWindowLong(hwnd, GWL_STYLE, style & ~WS_CAPTION);
+        style &= ~(WS_CAPTION | WS_THICKFRAME);
+        SetWindowLong(hwnd, GWL_STYLE, style);
 
-        // Disable DWM non-client rendering
+        // Remove extended styles
+        int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+        exStyle &= ~0x02000000; // WS_EX_COMPOSITED
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle);
+
+        // Disable DWM rendering
         int policy = NCRP_DISABLED;
         DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, ref policy, sizeof(int));
 
-        // Remove border on Windows 11
+        // Remove border
         int borderColor = DWMWA_COLOR_NONE;
         DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ref borderColor, sizeof(int));
+
+        // Extend frame into client area (forces removal)
+        var margins = new MARGINS { cxLeftWidth = 0, cxRightWidth = 0, cyTopHeight = 0, cyBottomHeight = 0 };
+        DwmExtendFrameIntoClientArea(hwnd, ref margins);
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
