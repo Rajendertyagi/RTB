@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using Microsoft.Windows.ApplicationModel.DynamicDependency;
 using TB.Services;
 using TB.ViewModels;
 
@@ -15,13 +14,7 @@ public partial class App : Application
         .AddSingleton<MainViewModel>()
         .BuildServiceProvider();
 
-    public App()
-    {
-        InitializeComponent();
-        // ✅ FIX: Use hex version code instead of non-existent constant
-        // 0x00010003 = version 1.3.0.0, which satisfies SDK 2.x runtime requirements
-        Bootstrap.Initialize(0x00010003);
-    }
+    public App() => InitializeComponent(); // ✅ Bootstrap already initialized
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
