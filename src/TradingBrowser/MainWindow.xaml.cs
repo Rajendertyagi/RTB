@@ -3,9 +3,11 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Web.WebView2.Core;
 using TradingBrowser.ViewModels;
+using TradingBrowser.Services;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace TradingBrowser;
 
@@ -18,10 +20,8 @@ public sealed partial class MainWindow : Window
     {
         this.InitializeComponent();
         
-        // Set DataContext for ElementName bindings in DataTemplates
         RootGrid.DataContext = this; 
         
-        // Cast Content to FrameworkElement to access RequestedTheme
         if (this.Content is FrameworkElement content)
         {
             content.RequestedTheme = ElementTheme.Dark;
@@ -29,18 +29,22 @@ public sealed partial class MainWindow : Window
 
         SetupTitleBar();
         
-        // Initialize WebView2 on launch
+        // Hook into ViewModel navigation requests (Fixes Issue 2)
+        ViewModel.NavigationRequested += url => {
+            if (_isWebViewInitialized && MainWebView.CoreWebView2 != null) {
+                MainWebView.CoreWebView2.Navigate(url);
+            }
+        };
+
         _ = InitializeWebViewAsync();
     }
 
     private void SetupTitleBar()
     {
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+        SetTitleBar(AppTitleBar); // Now covers the whole top row
 
         var appWindow = this.AppWindow;
-        
-        // Use Microsoft.UI.Colors explicitly
         appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
         appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
         appWindow.TitleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
@@ -50,26 +54,23 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            // Portability: Store user data relative to the executable
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
 
-            // WORKAROUND: Bypass CoreWebView2Environment.CreateAsync compiler overload bugs 
-            // by using the official WebView2 environment variable for user data routing.
             Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", userDataFolder);
 
-            // Initialize with the default environment (No CreateAsync needed!)
             await MainWebView.EnsureCoreWebView2Async();
             
             MainWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
             MainWebView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
             
-            // Hook CoreWebView2 specific events
             MainWebView.CoreWebView2.DocumentTitleChanged += CoreWebView2_DocumentTitleChanged;
+            // Hook Navigation Completed to log network errors (Fixes Issue 5)
+            MainWebView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
             
             _isWebViewInitialized = true;
+            LoggingService.Log("WebView2 initialized successfully.");
 
-            // Load the initial tab
             if (ViewModel.SelectedTab != null && ViewModel.SelectedTab.Url != "about:blank")
             {
                 MainWebView.CoreWebView2.Navigate(ViewModel.SelectedTab.Url);
@@ -77,8 +78,28 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            // TODO: Route to LoggingService in Phase 4
-            System.Diagnostics.Debug.WriteLine($"WebView2 Init Error: {ex.Message}");
+            LoggingService.Error("WebView2 Init Error", ex);
+            
+            // Auto-run bootstrapper if WebView2 runtime is missing
+            string bootstrapper = Path.Combine(AppContext.BaseDirectory, "WebView2Bootstrapper.exe");
+            if (File.Exists(bootstrapper))
+            {
+                LoggingService.Log("WebView2 runtime missing. Launching bootstrapper...");
+                Process.Start(new ProcessStartInfo(bootstrapper) { UseShellExecute = true });
+            }
+        }
+    }
+
+    private void CoreWebView2_NavigationCompleted(CoreWebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
+    {
+        if (ViewModel.SelectedTab != null)
+        {
+            ViewModel.SelectedTab.IsLoading = false;
+            if (!args.IsSuccess)
+            {
+                // Logs errors like DNS failure, connection refused, etc.
+                LoggingService.Error($"Navigation failed for {sender.Source}: {args.WebErrorStatus}");
+            }
         }
     }
 
@@ -86,27 +107,22 @@ public sealed partial class MainWindow : Window
     {
         if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
 
-        // 1. Save state of the OLD tab
         if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab)
         {
-            // CoreWebView2.Source is a string, no .AbsoluteUri
             oldTab.Url = MainWebView.CoreWebView2.Source; 
             oldTab.CanGoBack = MainWebView.CoreWebView2.CanGoBack;
             oldTab.CanGoForward = MainWebView.CoreWebView2.CanGoForward;
         }
 
-        // 2. Load state of the NEW tab
         var newTab = ViewModel.SelectedTab;
         ViewModel.OmniboxText = newTab.Url;
         
-        // Only navigate if the URL is different to prevent redundant loads
         if (MainWebView.CoreWebView2.Source != newTab.Url)
         {
             MainWebView.CoreWebView2.Navigate(newTab.Url);
         }
     }
 
-    // Use fully qualified type for the sender to prevent namespace ambiguity
     private void MainWebView_NavigationStarting(Microsoft.UI.Xaml.Controls.WebView2 sender, CoreWebView2NavigationStartingEventArgs args)
     {
         if (ViewModel.SelectedTab != null)
