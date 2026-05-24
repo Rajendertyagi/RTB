@@ -1,80 +1,44 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core;
-using TB.Services;
-using TB.ViewModels;
+using Microsoft.UI.Xaml.Media;
+using TradingBrowser.ViewModels;
+using Windows.UI;
 
-namespace TB;
+namespace TradingBrowser;
 
 public sealed partial class MainWindow : Window
 {
-    private readonly MainViewModel _viewModel;
-    private readonly NavigationViewModel _navigationVM;
-    private readonly WebViewService _webViewService;
-    private readonly TabStateManager _tabManager;
-
-    public MainViewModel ViewModel => _viewModel;
-    public NavigationViewModel NavigationVM => _navigationVM;
+    public MainViewModel ViewModel { get; } = new();
 
     public MainWindow()
     {
-        InitializeComponent();
-        _viewModel = App.Services.GetRequiredService<MainViewModel>();
-        _navigationVM = App.Services.GetRequiredService<NavigationViewModel>();
-        _webViewService = App.Services.GetRequiredService<WebViewService>();
-        _tabManager = App.Services.GetRequiredService<TabStateManager>();
+        this.InitializeComponent();
+        
+        // Enforce Dark Theme
+        this.Content.RequestedTheme = ElementTheme.Dark;
 
-        this.ExtendsContentIntoTitleBar = true;
-        this.SetTitleBar(TitleBarGrid);
-        this.AppWindow.Resize(new Windows.Graphics.SizeInt32(1000, 600));
-
-        _webViewService.InitializeAsync(WebView).ContinueWith(_ =>
-        {
-            _webViewService.SourceChanged += (s, e) => NavigationVM.AddressBarText = _webViewService.CoreWebView2?.Source ?? "";
-            _webViewService.NavigationCompleted += (s, e) =>
-            {
-                if (_viewModel.SelectedTab != null)
-                    _viewModel.SelectedTab.Title = _webViewService.CoreWebView2?.DocumentTitle ?? "New Tab";
-            };
-            _tabManager.CreateNewTab("https://www.google.com");
-        });
+        // Setup Custom Title Bar
+        SetupTitleBar();
     }
 
-    private void Minimize_Click(object sender, RoutedEventArgs e)
+    private void SetupTitleBar()
     {
-        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
-        presenter?.Minimize();
-    }
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
 
-    private void Maximize_Click(object sender, RoutedEventArgs e)
-    {
-        var presenter = this.AppWindow.Presenter as Microsoft.UI.Windowing.OverlappedPresenter;
-        if (presenter?.State == Microsoft.UI.Windowing.OverlappedPresenterState.Maximized)
-            presenter.Restore();
-        else
-            presenter?.Maximize();
-    }
-
-    private void Close_Click(object sender, RoutedEventArgs e) => this.Close();
-
-    private void TabView_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
-    {
-        if (args.Tab.DataContext is TabViewModel tab)
-        {
-            _tabManager.CloseTab(tab.Id);
-        }
+        // Optional: Customize native caption button colors for Dark Mode
+        var appWindow = this.AppWindow;
+        appWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+        appWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+        appWindow.TitleBar.ButtonForegroundColor = Colors.White;
     }
 
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.Enter && !string.IsNullOrWhiteSpace(NavigationVM.AddressBarText))
+        if (e.Key == Windows.System.VirtualKey.Enter)
         {
-            var url = NavigationVM.AddressBarText.Contains(".") && !NavigationVM.AddressBarText.StartsWith("http")
-                ? $"https://{NavigationVM.AddressBarText}"
-                : $"https://www.google.com/search?q={Uri.EscapeDataString(NavigationVM.AddressBarText)}";
-            _tabManager.NavigateToUrl(url);
+            ViewModel.NavigateOmniboxCommand.Execute(null);
+            e.Handled = true;
         }
     }
 }
