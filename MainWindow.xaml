@@ -1,54 +1,100 @@
-<Window x:Class="TB.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="using:TB"
-        xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-        xmlns:vm="using:TB.ViewModels">
+<Window
+    x:Class="TradingBrowser.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:TradingBrowser.ViewModels"
+    mc:Ignorable="d"
+    Title="TradingBrowser">
 
-    <Grid>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/> <!-- Title Bar & Tabs -->
+            <RowDefinition Height="Auto"/> <!-- Omnibox -->
+            <RowDefinition Height="*"/>    <!-- WebView2 Host -->
         </Grid.RowDefinitions>
 
-        <Grid x:Name="TitleBarGrid" Grid.Row="0" Background="#E8EAED">
-            <TextBlock Text="TB" Margin="12,0" VerticalAlignment="Center" FontSize="12" FontWeight="Medium" Foreground="#3C4043"/>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="─" Width="46" Height="32" Click="Minimize_Click" Background="Transparent" BorderThickness="0" Foreground="#3C4043"/>
-                <Button Content="☐" Width="46" Height="32" Click="Maximize_Click" Background="Transparent" BorderThickness="0" Foreground="#3C4043"/>
-                <Button Content="" Width="46" Height="32" Click="Close_Click" Background="Transparent" BorderThickness="0" Foreground="#3C4043"/>
-            </StackPanel>
-        </Grid>
-
-        <!-- ✅ Correct Property: TabItemsSource -->
-        <controls:TabView x:Name="TabView" Grid.Row="1"
-                          TabItemsSource="{x:Bind ViewModel.Tabs}"
-                          SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
-                          TabCloseRequested="TabView_TabCloseRequested">
-            <controls:TabView.TabItemTemplate>
-                <DataTemplate x:DataType="vm:TabViewModel">
-                    <TextBlock Text="{x:Bind Title}" VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12"/>
-                </DataTemplate>
-            </controls:TabView.TabItemTemplate>
-        </controls:TabView>
-
-        <Grid Grid.Row="2" Background="#FFFFFF" Padding="8,6" BorderBrush="#E8EAED" BorderThickness="0,0,0,1">
+        <!-- Custom Title Bar & Tab Strip -->
+        <Grid Grid.Row="0" Height="36" ColumnSpacing="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>   <!-- Tabs -->
+                <ColumnDefinition Width="Auto"/> <!-- New Tab & Drag Region -->
+                <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="◀" Command="{x:Bind NavigationVM.BackCommand}" Margin="0,0,4,0" Width="32" Height="32"/>
-            <Button Grid.Column="1" Content="▶" Command="{x:Bind NavigationVM.ForwardCommand}" Margin="0,0,4,0" Width="32" Height="32"/>
-            <Button Grid.Column="2" Content="⟳" Command="{x:Bind NavigationVM.ReloadCommand}" Margin="0,0,8,0" Width="32" Height="32"/>
-            <TextBox x:Name="Omnibox" Grid.Column="3" PlaceholderText="Search or enter web address"
-                     Text="{x:Bind NavigationVM.AddressBarText, Mode=TwoWay}"
-                     KeyDown="Omnibox_KeyDown" Margin="0,0,8,0"/>
+
+            <!-- Tab Strip -->
+            <ListView Grid.Column="0" 
+                      ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                      SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                      CanReorderItems="True" AllowDrop="True"
+                      ScrollViewer.HorizontalScrollMode="Enabled" 
+                      ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                      ScrollViewer.VerticalScrollMode="Disabled">
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsStackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TabViewModel">
+                        <Grid Background="Transparent" Padding="8,4" MinWidth="150" MaxWidth="240" ContextFlyout="{StaticResource TabContextFlyout}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{x:Bind Title, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                            <Button Grid.Column="1" Command="{Binding ElementName=RootGrid, Path=DataContext.ViewModel.CloseTabCommand}" CommandParameter="{x:Bind}" Style="{ThemeResource AlternateCloseButtonStyle}" Width="24" Height="24"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- New Tab Button & Drag Region -->
+            <Grid Grid.Column="1" x:Name="AppTitleBar" Background="Transparent" VerticalAlignment="Stretch">
+                <Button Content="+" Command="{x:Bind ViewModel.AddTabCommand}" VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)"/>
+            </Grid>
         </Grid>
 
-        <controls:WebView2 x:Name="WebView" Grid.Row="3"/>
+        <!-- Omnibox -->
+        <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/> <!-- Back/Forward -->
+                <ColumnDefinition Width="*"/>    <!-- URL Bar -->
+            </Grid.ColumnDefinitions>
+            
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                <Button Content="←" ToolTipService.ToolTip="Back (Alt+Left)"/>
+                <Button Content="→" ToolTipService.ToolTip="Forward (Alt+Right)"/>
+                <Button Content="⟳" ToolTipService.ToolTip="Reload (F5)"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1" 
+                     Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                     PlaceholderText="Search Google or type a URL"
+                     KeyDown="Omnibox_KeyDown"
+                     VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- WebView2 Host (Responsive, fills remaining space) -->
+        <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
+            <TextBlock Text="WebView2 will be injected here in Phase 3" 
+                       HorizontalAlignment="Center" VerticalAlignment="Center" 
+                       Foreground="Gray"/>
+        </Grid>
     </Grid>
+
+    <!-- Tab Context Menu -->
+    <Window.Resources>
+        <MenuFlyout x:Key="TabContextFlyout">
+            <MenuFlyoutItem Text="New Tab" Command="{Binding ViewModel.AddTabCommand}"/>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutItem Text="Pin Tab"/>
+            <MenuFlyoutItem Text="Duplicate Tab"/>
+            <MenuFlyoutSeparator/>
+            <MenuFlyoutItem Text="Close Tab" Command="{Binding ViewModel.CloseTabCommand}"/>
+            <MenuFlyoutItem Text="Close Other Tabs"/>
+            <MenuFlyoutItem Text="Close Tabs to the Right"/>
+        </MenuFlyout>
+    </Window.Resources>
 </Window>
