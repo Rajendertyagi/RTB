@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:TradingBrowser.ViewModels"
+    xmlns:wv2="using:Microsoft.Web.WebView2.Core"
     mc:Ignorable="d"
     Title="TradingBrowser">
 
@@ -15,68 +16,74 @@
             <RowDefinition Height="*"/>    <!-- WebView2 Host -->
         </Grid.RowDefinitions>
 
-        <!-- Custom Title Bar & Tab Strip -->
-        <Grid Grid.Row="0" Height="36" ColumnSpacing="0">
+        <!-- Custom Title Bar & Tab Strip (FIX 1 & 3: Full width drag region, left-aligned tabs) -->
+        <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>   <!-- Tabs -->
-                <ColumnDefinition Width="Auto"/> <!-- New Tab & Drag Region -->
+                <ColumnDefinition Width="*"/>   <!-- Tabs & New Tab -->
                 <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
             </Grid.ColumnDefinitions>
 
-            <!-- Tab Strip -->
-            <ListView x:Name="TabListView" 
-                      Grid.Column="0" 
-                      ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
-                      SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
-                      SelectionChanged="TabListView_SelectionChanged"
-                      CanReorderItems="True" AllowDrop="True"
-                      ScrollViewer.HorizontalScrollMode="Enabled" 
-                      ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                      ScrollViewer.VerticalScrollMode="Disabled">
-                <ListView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <ItemsStackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ListView.ItemsPanel>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:TabViewModel">
-                        <Grid Background="Transparent" Padding="8,4" MinWidth="150" MaxWidth="240">
-                            <Grid.ContextFlyout>
-                                <MenuFlyout>
-                                    <MenuFlyoutItem Text="New Tab" Command="{Binding ViewModel.AddTabCommand, ElementName=RootGrid}"/>
-                                    <MenuFlyoutSeparator/>
-                                    <MenuFlyoutItem Text="Pin Tab"/>
-                                    <MenuFlyoutItem Text="Duplicate Tab"/>
-                                    <MenuFlyoutSeparator/>
-                                    <MenuFlyoutItem Text="Close Tab" Command="{Binding ViewModel.CloseTabCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                    <MenuFlyoutItem Text="Close Other Tabs"/>
-                                    <MenuFlyoutItem Text="Close Tabs to the Right"/>
-                                </MenuFlyout>
-                            </Grid.ContextFlyout>
-                            
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <TextBlock Text="{x:Bind Title, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                            <Button Grid.Column="1" 
-                                    Command="{Binding ViewModel.CloseTabCommand, ElementName=RootGrid}" 
-                                    CommandParameter="{x:Bind}" 
-                                    Style="{ThemeResource AlternateCloseButtonStyle}" 
-                                    Width="24" Height="24"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <!-- Left-aligned container for Tabs + New Tab Button -->
+            <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/> <!-- Tabs -->
+                    <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
+                </Grid.ColumnDefinitions>
 
-            <!-- New Tab Button & Drag Region -->
-            <Grid Grid.Column="1" x:Name="AppTitleBar" Background="Transparent" VerticalAlignment="Stretch">
-                <Button Content="+" Command="{x:Bind ViewModel.AddTabCommand}" VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)"/>
+                <ListView x:Name="TabListView" 
+                          Grid.Column="0"
+                          ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                          SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                          SelectionChanged="TabListView_SelectionChanged"
+                          CanReorderItems="True" AllowDrop="True"
+                          ScrollViewer.HorizontalScrollMode="Enabled" 
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          ScrollViewer.VerticalScrollMode="Disabled"
+                          Background="Transparent">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TabViewModel">
+                            <Grid Background="Transparent" Padding="8,4" MinWidth="150" MaxWidth="240">
+                                <Grid.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuFlyoutItem Text="New Tab" Command="{Binding ViewModel.AddTabCommand, ElementName=RootGrid}"/>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem Text="Pin Tab"/>
+                                        <MenuFlyoutItem Text="Duplicate Tab"/>
+                                        <MenuFlyoutSeparator/>
+                                        <MenuFlyoutItem Text="Close Tab" Command="{Binding ViewModel.CloseTabCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
+                                        <MenuFlyoutItem Text="Close Other Tabs"/>
+                                        <MenuFlyoutItem Text="Close Tabs to the Right"/>
+                                    </MenuFlyout>
+                                </Grid.ContextFlyout>
+                                
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Text="{x:Bind Title, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                                <Button Grid.Column="1" 
+                                        Command="{Binding ViewModel.CloseTabCommand, ElementName=RootGrid}" 
+                                        CommandParameter="{x:Bind}" 
+                                        Style="{ThemeResource AlternateCloseButtonStyle}" 
+                                        Width="24" Height="24"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- New Tab Button (Sits exactly to the right of the tabs) -->
+                <Button Grid.Column="1" Content="+" Command="{x:Bind ViewModel.AddTabCommand}" 
+                        VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)"/>
             </Grid>
         </Grid>
 
-        <!-- Omnibox -->
+        <!-- Omnibox (FIX 4: Added Home Button) -->
         <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/> <!-- Nav Buttons -->
@@ -84,6 +91,7 @@
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                <Button Content="🏠" Command="{x:Bind ViewModel.GoHomeCommand}" ToolTipService.ToolTip="Home"/>
                 <Button Content="←" ToolTipService.ToolTip="Back (Alt+Left)"/>
                 <Button Content="→" ToolTipService.ToolTip="Forward (Alt+Right)"/>
                 <Button Content="⟳" ToolTipService.ToolTip="Reload (F5)"/>
