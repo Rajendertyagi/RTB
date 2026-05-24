@@ -54,8 +54,8 @@ public sealed partial class MainWindow : Window
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
 
-            // FIX: Use named arguments to bypass C# 14 optional parameter overload resolution issues
-            var env = await CoreWebView2Environment.CreateAsync(userDataFolder: userDataFolder);
+            // FIX: Use exact positional arguments to bypass C# 14 named parameter overload issues
+            var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder);
             await MainWebView.EnsureCoreWebView2Async(env);
             
             MainWebView.CoreWebView2.Settings.IsStatusBarEnabled = false;
