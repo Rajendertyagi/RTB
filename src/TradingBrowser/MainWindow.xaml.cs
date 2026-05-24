@@ -95,7 +95,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void MainWebView_NavigationStarting(WebView2 sender, CoreWebView2NavigationStartingEventArgs args)
+    // FIX: Use fully qualified type for the sender to prevent namespace ambiguity 
+    // between the XAML Control and the Core Engine.
+    private void MainWebView_NavigationStarting(Microsoft.UI.Xaml.Controls.WebView2 sender, CoreWebView2NavigationStartingEventArgs args)
     {
         if (ViewModel.SelectedTab != null)
         {
@@ -115,4 +117,11 @@ public sealed partial class MainWindow : Window
     }
 
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
-   
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            ViewModel.NavigateOmniboxCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+}
