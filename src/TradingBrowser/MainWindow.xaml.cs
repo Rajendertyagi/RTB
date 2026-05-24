@@ -28,7 +28,10 @@ public sealed partial class MainWindow : Window
         if (this.Content is FrameworkElement content) content.RequestedTheme = ElementTheme.Dark;
 
         _sessionService = new SessionService(App.Db!);
-        _shortcutsJs = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js"));
+        
+        // Ensure Scripts folder exists in output, fallback gracefully if missing
+        string jsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js");
+        _shortcutsJs = File.Exists(jsPath) ? File.ReadAllText(jsPath) : "";
 
         SetupTitleBar();
         SetupEventHooks();
@@ -47,19 +50,16 @@ public sealed partial class MainWindow : Window
 
     private void SetupEventHooks()
     {
-        // Mouse Hooks (Back/Forward buttons)
         RootGrid.PointerPressed += RootGrid_PointerPressed;
-        
-        // Keyboard Hooks (When UI has focus)
         RootGrid.KeyDown += RootGrid_KeyDown;
         
-        // ViewModel Event Routing
         ViewModel.NavigationRequested += url => { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate(url); };
+        
+        // This now works because Omnibox has an x:Name in XAML
         ViewModel.FocusOmniboxRequested += () => { Omnibox.Focus(FocusState.Programmatic); Omnibox.SelectAll(); };
         ViewModel.ToggleFullscreenRequested += ToggleFullscreen;
         ViewModel.OpenDevToolsRequested += () => { if (_isWebViewInitialized) MainWebView.CoreWebView2.OpenDevToolsWindow(); };
 
-        // Save Session on Close
         this.AppWindow.Closing += (s, e) => {
             if (ViewModel.SelectedTab != null)
                 _sessionService.SaveSession(ViewModel.Tabs, ViewModel.SelectedTab.Id.ToString());
@@ -90,14 +90,17 @@ public sealed partial class MainWindow : Window
             MainWebView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
             MainWebView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
             
-            // Hook JS Messages for Shortcuts
             MainWebView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-            MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_shortcutsJs);
+            
+            // FIX 2: Added 'await' to clear the CS4014 compiler warning
+            if (!string.IsNullOrEmpty(_shortcutsJs))
+            {
+                await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_shortcutsJs);
+            }
 
             _isWebViewInitialized = true;
             LoggingService.Log("WebView2 initialized.");
 
-            // Restore Session
             var restoredTabs = _sessionService.LoadSession(out string? activeId);
             ViewModel.InitializeSession(restoredTabs, activeId);
         }
@@ -109,7 +112,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // --- JS Message Handler (WebView Shortcuts) ---
     private void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
     {
         string msg = args.TryGetWebMessageAsString();
@@ -120,7 +122,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // --- UI Keyboard Handler ---
     private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         bool ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
@@ -151,7 +152,6 @@ public sealed partial class MainWindow : Window
         else if (key.StartsWith("CTRL_NUM_")) { if (int.TryParse(key[^1..], out int num)) ViewModel.SwitchToTab(num == 9 ? ViewModel.Tabs.Count - 1 : num - 1); }
     }
 
-    // --- Mouse Back/Forward ---
     private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
         var props = e.GetCurrentPoint(null).Properties;
@@ -159,7 +159,6 @@ public sealed partial class MainWindow : Window
         else if (props.IsXButton2Pressed) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     }
 
-    // --- Fullscreen Toggle ---
     private void ToggleFullscreen()
     {
         var presenter = this.AppWindow.Presenter as OverlappedPresenter;
@@ -181,7 +180,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // --- Standard Nav & Tab Handlers ---
     private void Back_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoBack) MainWebView.CoreWebView2.GoBack(); }
     private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
