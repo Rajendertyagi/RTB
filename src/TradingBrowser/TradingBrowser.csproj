@@ -1,26 +1,34 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows10.0.22621.0</TargetFramework>
+    
+    <!-- Targeting .NET 10 (Latest Stable LTS) for Windows 11 (Build 22621 / 22H2) -->
+    <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    
     <RootNamespace>TradingBrowser</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64</Platforms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
-    <LangVersion>13</LangVersion>
+    
+    <!-- C# 14 is the stable language version for .NET 10 -->
+    <LangVersion>14</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     
-    <!-- Suppress Source Generator warnings for private fields -->
+    <!-- Suppress Source Generator warnings for private fields used by MVVM Toolkit -->
     <NoWarn>$(NoWarn);CS0169;CS0414;IDE0051;IDE0044</NoWarn>
     
-    <!-- WinUI 3 & Unpackaged (No MSIX) -->
+    <!-- WinUI 3 & Unpackaged (No MSIX) Configuration -->
     <UseWinUI>true</UseWinUI>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- Required for XAML compilation to generate resources.pri in unpackaged mode -->
     <EnableMsixTooling>true</EnableMsixTooling> 
     
     <!-- Portability & Size Optimization -->
+    <!-- Framework Dependent: Requires .NET 10 Desktop Runtime on the host machine -->
     <SelfContained>false</SelfContained> 
+    <!-- Strips all non-English resource DLLs to minimize disk footprint -->
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages> 
     
     <!-- App Details -->
@@ -29,14 +37,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Exact versions requested -->
+    <!-- Exact package versions requested -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
   </ItemGroup>
 
-  <!-- Ensure JavaScript files are copied to the output directory -->
+  <!-- Ensure JavaScript injection files are copied to the output directory on build -->
   <ItemGroup>
     <None Update="Scripts\shortcuts.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
