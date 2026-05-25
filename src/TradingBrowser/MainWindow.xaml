@@ -39,28 +39,25 @@
             </Pivot>
         </SplitView.Pane>
         
-        <!-- Fluid Responsive Main Grid -->
         <Grid x:Name="RootGrid" Background="#202124" UseLayoutRounding="True">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Title Bar & Tabs -->
-                <RowDefinition Height="Auto"/> <!-- Omnibox -->
-                <RowDefinition Height="*"/>    <!-- WebView2 (Fills remaining space) -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Custom Title Bar & Tab Strip -->
             <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36" UseLayoutRounding="True">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>   <!-- Tabs expand to fill available space -->
-                    <ColumnDefinition Width="138"/> <!-- Fixed reservation for native window controls -->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="138"/>
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/> <!-- Tabs -->
-                        <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Tab Strip with Horizontal Scrolling -->
                     <ListView x:Name="TabListView" 
                               Grid.Column="0"
                               ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
@@ -78,26 +75,13 @@
                         </ListView.ItemsPanel>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:TabViewModel">
+                                <!-- FIX: Removed ContextFlyout to prevent WMC9999 crash due to invalid ElementName binding scope -->
                                 <controls:TabItemPresenter 
                                     Title="{x:Bind Title, Mode=OneWay}"
                                     IsSelected="{x:Bind IsSelected, Mode=OneWay}"
                                     IsPinned="{x:Bind IsPinned, Mode=OneWay}"
                                     MiddleClicked="Tab_MiddleClicked"
                                     CloseClicked="Tab_CloseClicked">
-                                    <controls:TabItemPresenter.ContextFlyout>
-                                        <MenuFlyout>
-                                            <MenuFlyoutItem Text="New Tab" Command="{Binding ViewModel.AddTabCommand, ElementName=RootGrid}"/>
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Duplicate Tab" Command="{Binding ViewModel.DuplicateTabCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                            <MenuFlyoutItem Text="Pin Tab" Command="{Binding ViewModel.PinTabCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Close Tab" Command="{Binding ViewModel.CloseTabCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                            <MenuFlyoutItem Text="Close Other Tabs" Command="{Binding ViewModel.CloseOtherTabsCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                            <MenuFlyoutItem Text="Close Tabs to the Right" Command="{Binding ViewModel.CloseTabsToRightCommand, ElementName=RootGrid}" CommandParameter="{x:Bind}"/>
-                                            <MenuFlyoutSeparator/>
-                                            <MenuFlyoutItem Text="Reopen Closed Tab" Command="{Binding ViewModel.ReopenClosedTabCommand, ElementName=RootGrid}"/>
-                                        </MenuFlyout>
-                                    </controls:TabItemPresenter.ContextFlyout>
                                 </controls:TabItemPresenter>
                             </DataTemplate>
                         </ListView.ItemTemplate>
@@ -108,11 +92,10 @@
                 </Grid>
             </Grid>
 
-            <!-- Omnibox & Navigation Toolbar -->
             <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>  <!-- Buttons -->
-                    <ColumnDefinition Width="*"/>     <!-- Omnibox expands fluidly -->
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
@@ -134,7 +117,6 @@
                          VerticalAlignment="Center" UseLayoutRounding="True"/>
             </Grid>
 
-            <!-- WebView2 Host -->
             <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
                 <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
             </Grid>
