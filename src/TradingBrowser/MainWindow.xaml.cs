@@ -31,7 +31,6 @@ public sealed partial class MainWindow : Window
 
         _sessionService = new SessionService(App.Db!);
         
-        // Initialize Shortcut Service
         _shortcutService = new ShortcutService(
             ViewModel, 
             () => _isWebViewInitialized ? MainWebView.CoreWebView2 : null
@@ -60,7 +59,6 @@ public sealed partial class MainWindow : Window
 
     private void SetupEventHooks()
     {
-        // Route raw UI events to the ShortcutService
         RootGrid.PointerPressed += (s, e) => _shortcutService.HandlePointerPressed(e);
         RootGrid.KeyDown += (s, e) => _shortcutService.HandleUiKeyDown(e);
         
@@ -82,14 +80,14 @@ public sealed partial class MainWindow : Window
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
 
-            var options = new CoreWebView2EnvironmentOptions
-            {
-                AdditionalBrowserArguments = "--enable-features=msWebView2CodeCache --force-gpu-rasterization",
-                Language = "en-US"
-            };
+            // FIX: Bypass CoreWebView2Environment.CreateAsync compiler overload bugs entirely 
+            // by using the official WebView2 environment variables.
+            Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", userDataFolder);
+            Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--enable-features=msWebView2CodeCache --force-gpu-rasterization");
+            Environment.SetEnvironmentVariable("WEBVIEW2_LANGUAGE", "en-US");
 
-            var env = await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
-            await MainWebView.EnsureCoreWebView2Async(env);
+            // Initialize with the default environment (No CreateAsync needed!)
+            await MainWebView.EnsureCoreWebView2Async();
             
             var settings = MainWebView.CoreWebView2.Settings;
             settings.IsStatusBarEnabled = false;
@@ -110,7 +108,7 @@ public sealed partial class MainWindow : Window
                 await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_tradingViewJs);
 
             _isWebViewInitialized = true;
-            LoggingService.Log("WebView2 initialized successfully.");
+            LoggingService.Log("WebView2 initialized successfully via Environment Variables.");
 
             var restoredTabs = _sessionService.LoadSession(out string? activeId);
             ViewModel.InitializeSession(restoredTabs, activeId);
@@ -136,7 +134,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // --- Fullscreen Toggle (Kept in MainWindow as it manipulates the Window Presenter directly) ---
     private void ToggleFullscreen()
     {
         var presenter = this.AppWindow.Presenter as OverlappedPresenter;
@@ -158,7 +155,6 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    // --- Standard UI Click Handlers ---
     private void Back_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoBack) MainWebView.CoreWebView2.GoBack(); }
     private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
@@ -166,7 +162,6 @@ public sealed partial class MainWindow : Window
     private void CloseTab_Click(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
 
-    // --- WebView State Sync ---
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
