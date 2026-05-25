@@ -19,13 +19,13 @@
         <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="138"/>
+                <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/> <!-- Tabs -->
+                    <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
                 </Grid.ColumnDefinitions>
 
                 <ListView x:Name="TabListView" 
@@ -75,7 +75,7 @@
             </Grid>
         </Grid>
 
-        <!-- Omnibox -->
+        <!-- Omnibox & Navigation -->
         <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -87,9 +87,9 @@
                 <Button x:Name="BackButton" Content="←" Click="Back_Click" IsEnabled="False" ToolTipService.ToolTip="Back"/>
                 <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" IsEnabled="False" ToolTipService.ToolTip="Forward"/>
                 <Button Content="⟳" Click="Reload_Click" ToolTipService.ToolTip="Reload"/>
+                <Button Content="⚙️" Click="Settings_Click" ToolTipService.ToolTip="Settings"/>
             </StackPanel>
 
-            <!-- FIX 1: Added x:Name="Omnibox" so code-behind can focus it -->
             <TextBox x:Name="Omnibox"
                      Grid.Column="1" 
                      Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
