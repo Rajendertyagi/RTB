@@ -2,7 +2,8 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Windows.UI; // FIX: WinUI 3 uses Windows.UI.Colors, not Microsoft.UI.Colors
+using Windows.UI; // Provides the Color struct
+using static Windows.UI.Colors; // FIX: Import static Colors class members (White, Transparent, etc.)
 using System;
 
 namespace TradingBrowser.Controls;
@@ -45,10 +46,10 @@ public sealed partial class TabItemPresenter : UserControl
     /// </summary>
     private SolidColorBrush BackgroundBrush => IsSelected 
         ? new SolidColorBrush(Color.FromArgb(255, 32, 33, 36)) 
-        : new SolidColorBrush(Colors.Transparent);
+        : new SolidColorBrush(Transparent); // FIX: Now resolves via 'using static Windows.UI.Colors'
         
     private SolidColorBrush ForegroundBrush => IsSelected 
-        ? new SolidColorBrush(Colors.White) 
+        ? new SolidColorBrush(White) // FIX: Now resolves via 'using static Windows.UI.Colors'
         : new SolidColorBrush(Color.FromArgb(255, 154, 160, 166));
 
     /// <summary>
@@ -103,8 +104,6 @@ public sealed partial class TabItemPresenter : UserControl
     /// </summary>
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        // FIX: Removed e.Handled = true; RoutedEventArgs doesn't support it.
-        // The event is direct, not routed, so no bubbling occurs anyway.
         CloseClicked?.Invoke();
     }
 }
