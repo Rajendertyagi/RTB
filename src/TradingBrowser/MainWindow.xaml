@@ -8,12 +8,17 @@
     mc:Ignorable="d"
     Title="TradingBrowser">
 
-    <!-- SplitView acts as the container for the Library Sidebar and Main Content -->
+    <!-- 
+      SplitView acts as the root container for the Library Sidebar and the Main Content Area.
+      DisplayMode="Overlay" ensures the sidebar floats over content without resizing the main grid.
+    -->
     <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="#202124" CompactPaneLength="0" OpenPaneLength="350">
         
         <!-- Left Pane: Bookmarks & History Sidebar -->
         <SplitView.Pane>
+            <!-- Pivot control to switch between Bookmarks and History tabs -->
             <Pivot Title="Library" Margin="10" Foreground="White">
+                
                 <!-- Bookmarks Tab -->
                 <PivotItem Header="Bookmarks">
                     <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
@@ -47,24 +52,25 @@
         <!-- Main Content Area -->
         <Grid x:Name="RootGrid" Background="#202124">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/> <!-- Title Bar & Tabs -->
-                <RowDefinition Height="Auto"/> <!-- Omnibox -->
-                <RowDefinition Height="*"/>    <!-- WebView2 Host -->
+                <RowDefinition Height="Auto"/> <!-- Row 0: Title Bar & Tabs -->
+                <RowDefinition Height="Auto"/> <!-- Row 1: Omnibox & Toolbar -->
+                <RowDefinition Height="*"/>    <!-- Row 2: WebView2 Host -->
             </Grid.RowDefinitions>
 
             <!-- Custom Title Bar & Tab Strip -->
             <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
+                    <ColumnDefinition Width="*"/>               <!-- Tabs Area -->
+                    <ColumnDefinition Width="138"/>             <!-- Reserve space for native Min/Max/Close buttons -->
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/> <!-- Tabs -->
-                        <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
+                        <ColumnDefinition Width="Auto"/>        <!-- Tabs -->
+                        <ColumnDefinition Width="Auto"/>        <!-- New Tab Button -->
                     </Grid.ColumnDefinitions>
 
+                    <!-- Tab List View -->
                     <ListView x:Name="TabListView" 
                               Grid.Column="0"
                               ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
@@ -107,6 +113,7 @@
                         </ListView.ItemTemplate>
                     </ListView>
 
+                    <!-- New Tab Button -->
                     <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
                             VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)" Foreground="White"/>
                 </Grid>
@@ -115,8 +122,8 @@
             <!-- Omnibox & Navigation Toolbar -->
             <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>  <!-- Navigation Buttons -->
+                    <ColumnDefinition Width="*"/>     <!-- Address Bar -->
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
@@ -130,6 +137,7 @@
                     <Button x:Name="DownloadButton" Content="📥" Click="Downloads_Click" ToolTipService.ToolTip="Downloads"/>
                 </StackPanel>
 
+                <!-- Omnibox Input -->
                 <TextBox x:Name="Omnibox"
                          Grid.Column="1" 
                          Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
