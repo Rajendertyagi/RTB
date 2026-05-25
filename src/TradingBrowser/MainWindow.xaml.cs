@@ -4,10 +4,12 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.Web.WebView2.Core;
 using TradingBrowser.ViewModels;
 using TradingBrowser.Services;
+using TradingBrowser.Helpers;
 using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
+using System.Collections.Generic;
 
 namespace TradingBrowser;
 
@@ -80,13 +82,11 @@ public sealed partial class MainWindow : Window
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
 
-            // FIX: Bypass CoreWebView2Environment.CreateAsync compiler overload bugs entirely 
-            // by using the official WebView2 environment variables.
+            // Bypass CoreWebView2Environment.CreateAsync compiler bugs using environment variables
             Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", userDataFolder);
             Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--enable-features=msWebView2CodeCache --force-gpu-rasterization");
             Environment.SetEnvironmentVariable("WEBVIEW2_LANGUAGE", "en-US");
 
-            // Initialize with the default environment (No CreateAsync needed!)
             await MainWebView.EnsureCoreWebView2Async();
             
             var settings = MainWebView.CoreWebView2.Settings;
@@ -110,8 +110,17 @@ public sealed partial class MainWindow : Window
             _isWebViewInitialized = true;
             LoggingService.Log("WebView2 initialized successfully via Environment Variables.");
 
-            var restoredTabs = _sessionService.LoadSession(out string? activeId);
-            ViewModel.InitializeSession(restoredTabs, activeId);
+            // Session Restore Logic based on Settings
+            bool shouldRestore = SettingsService.Get("RestoreSession", "true") == "true";
+            if (shouldRestore)
+            {
+                var restoredTabs = _sessionService.LoadSession(out string? activeId);
+                ViewModel.InitializeSession(restoredTabs, activeId);
+            }
+            else
+            {
+                ViewModel.InitializeSession(new List<TabViewModel>(), null);
+            }
         }
         catch (Exception ex)
         {
@@ -155,6 +164,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    // --- UI Click Handlers ---
     private void Back_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoBack) MainWebView.CoreWebView2.GoBack(); }
     private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
@@ -162,6 +172,58 @@ public sealed partial class MainWindow : Window
     private void CloseTab_Click(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
 
+    private async void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = new SettingsViewModel();
+        
+        var panel = new StackPanel { Spacing = 16, Width = 400 };
+        
+        panel.Children.Add(new TextBlock { Text = "Default Search Engine", FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+        var comboBox = new ComboBox 
+        { 
+            ItemsSource = vm.SearchEngines, 
+            SelectedIndex = vm.SelectedSearchEngineIndex,
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        comboBox.SelectionChanged += (s, args) => vm.SelectedSearchEngineIndex = comboBox.SelectedIndex;
+        panel.Children.Add(comboBox);
+
+        var toggle = new ToggleSwitch 
+        { 
+            Header = "Restore last session on startup", 
+            IsOn = vm.RestoreSessionOnStartup,
+            Margin = new Thickness(0, 8, 0, 0)
+        };
+        toggle.Toggled += (s, args) => vm.RestoreSessionOnStartup = toggle.IsOn;
+        panel.Children.Add(toggle);
+
+        var clearBtn = new Button 
+        { 
+            Content = "Clear Browsing Data (Cache, Cookies, History)", 
+            Margin = new Thickness(0, 16, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Stretch
+        };
+        clearBtn.Click += (s, args) => 
+        {
+            vm.ClearBrowsingDataCommand.Execute(null);
+            clearBtn.Content = "Cleared! (Restart app to apply)";
+            clearBtn.IsEnabled = false;
+        };
+        panel.Children.Add(clearBtn);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Settings",
+            Content = panel,
+            CloseButtonText = "Done",
+            XamlRoot = this.Content.XamlRoot,
+            RequestedTheme = ElementTheme.Dark
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    // --- WebView State Sync ---
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
