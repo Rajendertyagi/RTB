@@ -9,18 +9,20 @@
     Title="TradingBrowser">
 
     <!-- 
-      SplitView acts as the root container for the Library Sidebar and the Main Content Area.
-      DisplayMode="Overlay" ensures the sidebar floats over content without resizing the main grid.
+      SplitView Container: 
+      Manages the overlay sidebar (Library) and the main browser content area.
+      DisplayMode="Overlay" ensures the sidebar floats without resizing the main grid.
     -->
     <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="#202124" CompactPaneLength="0" OpenPaneLength="350">
         
-        <!-- Left Pane: Bookmarks & History Sidebar -->
+        <!-- Left Pane: Library Sidebar (Bookmarks & History) -->
         <SplitView.Pane>
             <!-- Pivot control to switch between Bookmarks and History tabs -->
             <Pivot Title="Library" Margin="10" Foreground="White">
                 
-                <!-- Bookmarks Tab -->
+                <!-- Bookmarks Section -->
                 <PivotItem Header="Bookmarks">
+                    <!-- Binds to BookmarkItem objects populated from SQLite -->
                     <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:BookmarkItem">
@@ -33,8 +35,9 @@
                     </ListView>
                 </PivotItem>
                 
-                <!-- History Tab -->
+                <!-- History Section -->
                 <PivotItem Header="History">
+                    <!-- Binds to HistoryItem objects populated from SQLite -->
                     <ListView x:Name="HistoryListView" SelectionMode="Single" SelectionChanged="HistoryListView_SelectionChanged">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:HistoryItem">
@@ -49,7 +52,7 @@
             </Pivot>
         </SplitView.Pane>
         
-        <!-- Main Content Area -->
+        <!-- Main Content Area: Contains Title Bar, Omnibox, and WebView2 -->
         <Grid x:Name="RootGrid" Background="#202124">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/> <!-- Row 0: Title Bar & Tabs -->
@@ -60,17 +63,17 @@
             <!-- Custom Title Bar & Tab Strip -->
             <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>               <!-- Tabs Area -->
-                    <ColumnDefinition Width="138"/>             <!-- Reserve space for native Min/Max/Close buttons -->
+                    <ColumnDefinition Width="*"/>               <!-- Expands to fill available space for drag region -->
+                    <ColumnDefinition Width="138"/>             <!-- Reserves space for native Min/Max/Close buttons -->
                 </Grid.ColumnDefinitions>
 
                 <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>        <!-- Tabs -->
+                        <ColumnDefinition Width="Auto"/>        <!-- Tabs Container -->
                         <ColumnDefinition Width="Auto"/>        <!-- New Tab Button -->
                     </Grid.ColumnDefinitions>
 
-                    <!-- Tab List View -->
+                    <!-- Tab List View: Horizontal scrolling list of open tabs -->
                     <ListView x:Name="TabListView" 
                               Grid.Column="0"
                               ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
@@ -113,7 +116,7 @@
                         </ListView.ItemTemplate>
                     </ListView>
 
-                    <!-- New Tab Button -->
+                    <!-- New Tab Button: Positioned directly to the right of the last tab -->
                     <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
                             VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)" Foreground="White"/>
                 </Grid>
@@ -126,18 +129,18 @@
                     <ColumnDefinition Width="*"/>     <!-- Address Bar -->
                 </Grid.ColumnDefinitions>
                 
+                <!-- Left-aligned Navigation Controls -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
                     <Button Content="🏠" Click="Home_Click" ToolTipService.ToolTip="Home"/>
                     <Button x:Name="BackButton" Content="←" Click="Back_Click" IsEnabled="False" ToolTipService.ToolTip="Back"/>
                     <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" IsEnabled="False" ToolTipService.ToolTip="Forward"/>
                     <Button Content="⟳" Click="Reload_Click" ToolTipService.ToolTip="Reload"/>
                     <Button x:Name="BookmarkButton" Content="☆" Click="Bookmark_Click" ToolTipService.ToolTip="Bookmark (Ctrl+D)"/>
-                    
-                    <!-- NEW: Download History Button -->
                     <Button x:Name="DownloadButton" Content="📥" Click="Downloads_Click" ToolTipService.ToolTip="Downloads"/>
+                    <Button x:Name="SettingsButton" Content="⚙️" Click="Settings_Click" ToolTipService.ToolTip="Settings"/>
                 </StackPanel>
 
-                <!-- Omnibox Input -->
+                <!-- Omnibox Input: Two-way bound to ViewModel for URL/Search input -->
                 <TextBox x:Name="Omnibox"
                          Grid.Column="1" 
                          Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
@@ -147,7 +150,7 @@
                          VerticalAlignment="Center"/>
             </Grid>
 
-            <!-- WebView2 Host -->
+            <!-- WebView2 Host: Renders all web content -->
             <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
                 <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
             </Grid>
