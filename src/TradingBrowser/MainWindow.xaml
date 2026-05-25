@@ -8,99 +8,141 @@
     mc:Ignorable="d"
     Title="TradingBrowser">
 
-    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <!-- Root SplitView acts as the container for the Sidebar and Main Content -->
+    <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="#202124" CompactPaneLength="0" OpenPaneLength="350">
+        
+        <!-- Left Pane: Bookmarks & History Sidebar -->
+        <SplitView.Pane>
+            <Pivot Title="Library" Margin="10" Foreground="White">
+                <!-- Bookmarks Tab -->
+                <PivotItem Header="Bookmarks">
+                    <!-- Binds to the Bookmarks collection in the ViewModel -->
+                    <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BookmarkItem">
+                                <!-- Using a custom class or Tuple for data binding -->
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind Url}" Foreground="Gray" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+                
+                <!-- History Tab -->
+                <PivotItem Header="History">
+                    <ListView x:Name="HistoryListView" SelectionMode="Single" SelectionChanged="HistoryListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:HistoryItem">
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind VisitTime}" Foreground="Gray" FontSize="10"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+            </Pivot>
+        </SplitView.Pane>
+        
+        <!-- Main Content Area -->
+        <Grid x:Name="RootGrid" Background="#202124">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- Title Bar & Tabs -->
+                <RowDefinition Height="Auto"/> <!-- Omnibox -->
+                <RowDefinition Height="*"/>    <!-- WebView2 Host -->
+            </Grid.RowDefinitions>
 
-        <!-- Custom Title Bar & Tab Strip -->
-        <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
-            </Grid.ColumnDefinitions>
-
-            <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+            <!-- Custom Title Bar & Tab Strip -->
+            <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" Height="36">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/> <!-- Tabs -->
-                    <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="138"/> <!-- Reserve space for native Min/Max/Close -->
                 </Grid.ColumnDefinitions>
 
-                <ListView x:Name="TabListView" 
-                          Grid.Column="0"
-                          ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
-                          SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
-                          SelectionChanged="TabListView_SelectionChanged"
-                          CanReorderItems="True" AllowDrop="True"
-                          ScrollViewer.HorizontalScrollMode="Enabled" 
-                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                          ScrollViewer.VerticalScrollMode="Disabled"
-                          Background="Transparent">
-                    <ListView.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <ItemsStackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ListView.ItemsPanel>
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TabViewModel">
-                            <Grid Background="Transparent" Padding="8,4" MinWidth="150" MaxWidth="240">
-                                <Grid.ContextFlyout>
-                                    <MenuFlyout>
-                                        <MenuFlyoutItem Text="New Tab" Click="NewTab_Click"/>
-                                        <MenuFlyoutSeparator/>
-                                        <MenuFlyoutItem Text="Close Tab" Click="CloseTab_Click"/>
-                                    </MenuFlyout>
-                                </Grid.ContextFlyout>
-                                
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <TextBlock Text="{x:Bind Title, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                                
-                                <Button Grid.Column="1" 
-                                        Click="CloseTab_Click"
-                                        Style="{ThemeResource AlternateCloseButtonStyle}" 
-                                        Width="24" Height="24"/>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/> <!-- Tabs -->
+                        <ColumnDefinition Width="Auto"/> <!-- New Tab Button -->
+                    </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
-                        VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)"/>
+                    <ListView x:Name="TabListView" 
+                              Grid.Column="0"
+                              ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                              SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                              SelectionChanged="TabListView_SelectionChanged"
+                              CanReorderItems="True" AllowDrop="True"
+                              ScrollViewer.HorizontalScrollMode="Enabled" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.VerticalScrollMode="Disabled"
+                              Background="Transparent">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsStackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TabViewModel">
+                                <Grid Background="Transparent" Padding="8,4" MinWidth="150" MaxWidth="240">
+                                    <Grid.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuFlyoutItem Text="New Tab" Click="NewTab_Click"/>
+                                            <MenuFlyoutSeparator/>
+                                            <MenuFlyoutItem Text="Close Tab" Click="CloseTab_Click"/>
+                                        </MenuFlyout>
+                                    </Grid.ContextFlyout>
+                                    
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Foreground="White"/>
+                                    
+                                    <Button Grid.Column="1" 
+                                            Click="CloseTab_Click"
+                                            Style="{ThemeResource AlternateCloseButtonStyle}" 
+                                            Width="24" Height="24"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
+                            VerticalAlignment="Center" Margin="4,0" ToolTipService.ToolTip="New Tab (Ctrl+T)" Foreground="White"/>
+                </Grid>
+            </Grid>
+
+            <!-- Omnibox & Navigation -->
+            <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                    <Button Content="🏠" Click="Home_Click" ToolTipService.ToolTip="Home"/>
+                    <Button x:Name="BackButton" Content="←" Click="Back_Click" IsEnabled="False" ToolTipService.ToolTip="Back" Foreground="White"/>
+                    <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" IsEnabled="False" ToolTipService.ToolTip="Forward" Foreground="White"/>
+                    <Button Content="⟳" Click="Reload_Click" ToolTipService.ToolTip="Reload" Foreground="White"/>
+                    <!-- Bookmark Star Button -->
+                    <Button x:Name="BookmarkButton" Content="☆" Click="Bookmark_Click" ToolTipService.ToolTip="Bookmark (Ctrl+D)" Foreground="White"/>
+                </StackPanel>
+
+                <TextBox x:Name="Omnibox"
+                         Grid.Column="1" 
+                         Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                         PlaceholderText="Search Google or type a URL"
+                         KeyDown="Omnibox_KeyDown"
+                         Background="#303134" Foreground="White" BorderThickness="0"
+                         VerticalAlignment="Center"/>
+            </Grid>
+
+            <!-- WebView2 Host -->
+            <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
+                <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
             </Grid>
         </Grid>
-
-        <!-- Omnibox & Navigation -->
-        <Grid Grid.Row="1" Padding="8,4" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
-                <Button Content="🏠" Click="Home_Click" ToolTipService.ToolTip="Home"/>
-                <Button x:Name="BackButton" Content="←" Click="Back_Click" IsEnabled="False" ToolTipService.ToolTip="Back"/>
-                <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" IsEnabled="False" ToolTipService.ToolTip="Forward"/>
-                <Button Content="⟳" Click="Reload_Click" ToolTipService.ToolTip="Reload"/>
-                <Button Content="⚙️" Click="Settings_Click" ToolTipService.ToolTip="Settings"/>
-            </StackPanel>
-
-            <TextBox x:Name="Omnibox"
-                     Grid.Column="1" 
-                     Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                     PlaceholderText="Search Google or type a URL"
-                     KeyDown="Omnibox_KeyDown"
-                     VerticalAlignment="Center"/>
-        </Grid>
-
-        <!-- WebView2 Host -->
-        <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
-            <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
-        </Grid>
-    </Grid>
+    </SplitView>
 </Window>
