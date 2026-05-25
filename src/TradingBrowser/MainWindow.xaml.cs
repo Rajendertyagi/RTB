@@ -5,6 +5,7 @@ using Microsoft.Web.WebView2.Core;
 using TradingBrowser.ViewModels;
 using TradingBrowser.Services;
 using TradingBrowser.Helpers;
+using TradingBrowser.Controls;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -146,12 +147,12 @@ public sealed partial class MainWindow : Window
         var b = _hbService.GetBookmarks();
         var h = _hbService.GetHistory();
         
-        var bookmarkList = new List<BookmarkItem>();
-        foreach(var item in b) bookmarkList.Add(new BookmarkItem { Url = item.Url, Title = item.Title });
+        var bookmarkList = new List<ViewModels.BookmarkItem>();
+        foreach(var item in b) bookmarkList.Add(new ViewModels.BookmarkItem { Url = item.Url, Title = item.Title });
         BookmarkListView.ItemsSource = bookmarkList;
 
-        var historyList = new List<HistoryItem>();
-        foreach(var item in h) historyList.Add(new HistoryItem { Url = item.Url, Title = item.Title, VisitTime = item.Time });
+        var historyList = new List<ViewModels.HistoryItem>();
+        foreach(var item in h) historyList.Add(new ViewModels.HistoryItem { Url = item.Url, Title = item.Title, VisitTime = item.Time });
         HistoryListView.ItemsSource = historyList;
 
         if (ViewModel.SelectedTab != null)
@@ -171,13 +172,11 @@ public sealed partial class MainWindow : Window
         {
             _hbService.RemoveBookmark(url);
             BookmarkButton.Content = "☆";
-            LoggingService.Log($"Removed bookmark: {title}");
         }
         else
         {
             _hbService.AddBookmark(url, title);
             BookmarkButton.Content = "★";
-            LoggingService.Log($"Added bookmark: {title}");
         }
         
         RefreshSidebar();
@@ -185,7 +184,7 @@ public sealed partial class MainWindow : Window
 
     private void BookmarkListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (BookmarkListView.SelectedItem is BookmarkItem item)
+        if (BookmarkListView.SelectedItem is ViewModels.BookmarkItem item)
         {
             ViewModel.NavigateToUrlCommand.Execute(item.Url);
             MainSplitView.IsPaneOpen = false; 
@@ -195,7 +194,7 @@ public sealed partial class MainWindow : Window
 
     private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (HistoryListView.SelectedItem is HistoryItem item)
+        if (HistoryListView.SelectedItem is ViewModels.HistoryItem item)
         {
             ViewModel.NavigateToUrlCommand.Execute(item.Url);
             MainSplitView.IsPaneOpen = false;
@@ -225,8 +224,26 @@ public sealed partial class MainWindow : Window
     private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
     private void Home_Click(object sender, RoutedEventArgs e) { ViewModel.GoHomeCommand.Execute(null); }
-    private void CloseTab_Click(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
+
+    // --- Tab Interaction Handlers ---
+    private void Tab_MiddleClicked(object sender, RoutedEventArgs e)
+    {
+        // Middle-click close: extract TabViewModel from DataContext
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
+        {
+            ViewModel.CloseTabCommand.Execute(tab);
+        }
+    }
+
+    private void Tab_CloseClicked(object sender, RoutedEventArgs e)
+    {
+        // X button close
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
+        {
+            ViewModel.CloseTabCommand.Execute(tab);
+        }
+    }
 
     private void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
     {
