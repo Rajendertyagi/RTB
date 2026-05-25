@@ -4,51 +4,21 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using TradingBrowser.Helpers;
 
 namespace TradingBrowser.ViewModels;
 
-/// <summary>
-/// Main ViewModel for the browser window. Manages tabs, navigation state, and commands.
-/// </summary>
 public partial class MainViewModel : ObservableObject
 {
-    /// <summary>
-    /// The currently selected tab.
-    /// </summary>
-    [ObservableProperty] 
-    private TabViewModel? _selectedTab;
+    [ObservableProperty] private TabViewModel? _selectedTab;
+    [ObservableProperty] private string _omniboxText = string.Empty;
+    [ObservableProperty] private bool _canGoBack;
+    [ObservableProperty] private bool _canGoForward;
 
-    /// <summary>
-    /// The text displayed in the omnibox.
-    /// </summary>
-    [ObservableProperty] 
-    private string _omniboxText = string.Empty;
-
-    /// <summary>
-    /// Indicates whether the back button should be enabled.
-    /// </summary>
-    [ObservableProperty] 
-    private bool _canGoBack;
-
-    /// <summary>
-    /// Indicates whether the forward button should be enabled.
-    /// </summary>
-    [ObservableProperty] 
-    private bool _canGoForward;
-
-    /// <summary>
-    /// Collection of open tabs bound to the TabStrip ListView.
-    /// </summary>
     public ObservableCollection<TabViewModel> Tabs { get; } = [];
-    
-    /// <summary>
-    /// Stack to track closed tabs for Ctrl+Shift+T functionality.
-    /// </summary>
     private readonly Stack<string> _closedTabs = new();
-    
-    /// <summary>
-    /// Events to route actions from ViewModel to View (Code-Behind).
-    /// </summary>
+    private string _searchEngine = "Google"; // Loaded from SettingsService in production
+
     public event Action<string>? NavigationRequested;
     public event Action? FocusOmniboxRequested;
     public event Action? ToggleFullscreenRequested;
@@ -56,9 +26,6 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel() { }
 
-    /// <summary>
-    /// Initializes tabs from a saved session or creates a default new tab.
-    /// </summary>
     public void InitializeSession(List<TabViewModel> restoredTabs, string? activeTabId)
     {
         Tabs.Clear();
@@ -109,21 +76,59 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void DuplicateTab(TabViewModel? tab)
+    {
+        tab ??= SelectedTab;
+        if (tab == null) return;
+        
+        var clone = new TabViewModel { Url = tab.Url, Title = tab.Title };
+        Tabs.Insert(Tabs.IndexOf(tab) + 1, clone);
+        SelectedTab = clone;
+        NavigationRequested?.Invoke(clone.Url);
+    }
+
+    [RelayCommand]
+    private void PinTab(TabViewModel? tab)
+    {
+        tab ??= SelectedTab;
+        if (tab == null) return;
+        tab.IsPinned = !tab.IsPinned;
+    }
+
+    [RelayCommand]
+    private void CloseOtherTabs(TabViewModel? tab)
+    {
+        tab ??= SelectedTab;
+        if (tab == null) return;
+        
+        var toKeep = new[] { tab };
+        var toClose = Tabs.Except(toKeep).ToList();
+        foreach (var t in toClose) _closedTabs.Push(t.Url);
+        
+        Tabs.Clear();
+        Tabs.Add(tab);
+        SelectedTab = tab;
+    }
+
+    [RelayCommand]
+    private void CloseTabsToRight(TabViewModel? tab)
+    {
+        tab ??= SelectedTab;
+        if (tab == null) return;
+        
+        int index = Tabs.IndexOf(tab);
+        var toClose = Tabs.Skip(index + 1).ToList();
+        foreach (var t in toClose) _closedTabs.Push(t.Url);
+        
+        foreach (var t in toClose) Tabs.Remove(t);
+    }
+
+    [RelayCommand]
     private void NavigateOmnibox()
     {
         if (SelectedTab == null || string.IsNullOrWhiteSpace(OmniboxText)) return;
         
-        string input = OmniboxText.Trim();
-        bool isUrl = Uri.TryCreate(input, UriKind.Absolute, out var uriResult) 
-                     && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
-                     
-        if (!isUrl && input.Contains('.') && !input.Contains(' '))
-        {
-            isUrl = true;
-            input = $"https://{input}";
-        }
-
-        string finalUrl = isUrl ? input : $"https://www.google.com/search?q={Uri.EscapeDataString(input)}";
+        string finalUrl = UriHelper.ResolveUrl(OmniboxText, _searchEngine);
         SelectedTab.Url = finalUrl;
         NavigationRequested?.Invoke(finalUrl);
     }
@@ -138,9 +143,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Command to navigate to a specific URL (used by Bookmarks & History).
-    /// </summary>
     [RelayCommand]
     private void NavigateToUrl(string url)
     {
@@ -151,19 +153,12 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    /// Updates the state of the Back and Forward buttons.
-    /// Called by MainWindow when WebView2 navigation completes.
-    /// </summary>
     public void UpdateNavigationState(bool canGoBack, bool canGoForward)
     {
         CanGoBack = canGoBack;
         CanGoForward = canGoForward;
     }
 
-    /// <summary>
-    /// Cycles to the next tab in the list.
-    /// </summary>
     public void NextTab()
     {
         if (SelectedTab == null || Tabs.Count <= 1) return;
@@ -171,9 +166,6 @@ public partial class MainViewModel : ObservableObject
         SelectedTab = Tabs[(index + 1) % Tabs.Count];
     }
 
-    /// <summary>
-    /// Cycles to the previous tab in the list.
-    /// </summary>
     public void PreviousTab()
     {
         if (SelectedTab == null || Tabs.Count <= 1) return;
@@ -181,27 +173,13 @@ public partial class MainViewModel : ObservableObject
         SelectedTab = Tabs[(index - 1 + Tabs.Count) % Tabs.Count];
     }
 
-    /// <summary>
-    /// Switches to a specific tab by index (0-8).
-    /// </summary>
     public void SwitchToTab(int index)
     {
         if (index >= 0 && index < Tabs.Count) SelectedTab = Tabs[index];
     }
 
-    /// <summary>
-    /// Triggers UI focus on the Omnibox.
-    /// </summary>
     public void TriggerFocusOmnibox() => FocusOmniboxRequested?.Invoke();
-    
-    /// <summary>
-    /// Triggers Fullscreen toggle.
-    /// </summary>
     public void TriggerToggleFullscreen() => ToggleFullscreenRequested?.Invoke();
-    
-    /// <summary>
-    /// Triggers DevTools window.
-    /// </summary>
     public void TriggerOpenDevTools() => OpenDevToolsRequested?.Invoke();
 
     partial void OnSelectedTabChanging(TabViewModel? value)
