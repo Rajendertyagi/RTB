@@ -64,8 +64,8 @@ public sealed partial class MainWindow : Window
 
         SetupTitleBar();
         SetupEventHooks();
+        SetupOmniboxAnimations(); // EDGE UI: Focus glow
         
-        // Pre-warm removed to prevent SDK overload resolution errors. EnsureCoreWebView2Async handles init.
         _ = InitializeWebViewAsync();
     }
 
