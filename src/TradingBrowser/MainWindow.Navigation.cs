@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Windowing;
 using System;
 
@@ -17,6 +18,22 @@ public sealed partial class MainWindow
         OmniboxIcon.Glyph = (isHttps && !isNewTab) ? "\uE72E" : "\uE721";
     }
 
+    // EDGE UI: Omnibox Focus & Hover Animations
+    private void SetupOmniboxAnimations()
+    {
+        Omnibox.GotFocus += (s, e) => {
+            OmniboxBorder.Background = (Brush)Resources["SolidBackgroundFillColorBaseBrush"];
+            OmniboxBorder.BorderBrush = (Brush)Resources["AccentFillColorDefaultBrush"];
+            OmniboxBorder.BorderThickness = new Thickness(1.5);
+        };
+        
+        Omnibox.LostFocus += (s, e) => {
+            OmniboxBorder.Background = (Brush)Resources["ControlFillColorDefaultBrush"];
+            OmniboxBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            OmniboxBorder.BorderThickness = new Thickness(0);
+        };
+    }
+
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Enter) 
@@ -31,13 +48,12 @@ public sealed partial class MainWindow
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
     private void Home_Click(object sender, RoutedEventArgs e) { ViewModel.GoHomeCommand.Execute(null); }
     
-    // FIX 5: Native Settings Dialog instead of edge://settings
     private async void Settings_Click(object sender, RoutedEventArgs e) 
     { 
         var dialog = new ContentDialog
         {
             Title = "Settings",
-            Content = "Native settings panel coming soon.\n\n(WebView2 blocks edge:// URIs for security reasons).",
+            Content = "Native settings panel coming soon.",
             CloseButtonText = "Ok",
             XamlRoot = RootGrid.XamlRoot
         };
