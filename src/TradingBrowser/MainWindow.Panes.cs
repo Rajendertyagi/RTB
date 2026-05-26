@@ -2,8 +2,7 @@ using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using TradingBrowser.Helpers;
-using TradingBrowser.Services;
+using TradingBrowser.Services; // FIXED: Points to the correct Services folder
 
 namespace TradingBrowser;
 
