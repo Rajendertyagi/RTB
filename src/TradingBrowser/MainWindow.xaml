@@ -1,353 +1,138 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.Web.WebView2.Core;
-using TradingBrowser.ViewModels;
-using TradingBrowser.Services;
-using TradingBrowser.Helpers;
-using TradingBrowser.Controls;
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.UI.Windowing;
-using System.Collections.Generic;
+<Window
+    x:Class="TradingBrowser.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:TradingBrowser.ViewModels"
+    xmlns:controls="using:TradingBrowser.Controls"
+    mc:Ignorable="d"
+    Title="TradingBrowser">
 
-namespace TradingBrowser;
-
-/// <summary>
-/// Main application window. Follows clean MVVM architecture with WinUI 3 native controls.
-/// Handles UI initialization, event wiring, WebView2 lifecycle, and service delegation.
-/// </summary>
-public sealed partial class MainWindow : Window
-{
-    public MainViewModel ViewModel { get; } = new();
-    private bool _isWebViewInitialized;
-    
-    // Core Services
-    private readonly SessionService _sessionService;
-    private readonly ShortcutService _shortcutService;
-    private readonly HistoryBookmarkService _hbService;
-    private readonly DownloadService _downloadService;
-    private WebViewNavigationService? _navService;
-    
-    // JavaScript Injectors
-    private readonly string _shortcutsJs;
-    private readonly string _tradingViewJs;
-
-    public MainWindow()
-    {
-        this.InitializeComponent();
-        RootGrid.DataContext = this; 
+    <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="#202124" CompactPaneLength="0" OpenPaneLength="350">
+        <SplitView.Pane>
+            <Pivot Title="Library" Margin="10" Foreground="White">
+                <PivotItem Header="Bookmarks">
+                    <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BookmarkItem">
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind Url}" Foreground="Gray" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+                <PivotItem Header="History">
+                    <ListView x:Name="HistoryListView" SelectionMode="Single" SelectionChanged="HistoryListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:HistoryItem">
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind VisitTime}" Foreground="Gray" FontSize="10"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+            </Pivot>
+        </SplitView.Pane>
         
-        // Enforce Dark Theme globally
-        if (this.Content is FrameworkElement content) 
-            content.RequestedTheme = ElementTheme.Dark;
+        <Grid x:Name="RootGrid" Background="#202124" UseLayoutRounding="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        // Initialize Backend Services
-        _sessionService = new SessionService(App.Db!);
-        _hbService = new HistoryBookmarkService(App.Db!);
-        _downloadService = new DownloadService(App.Db!);
-        
-        // Initialize Shortcut Service with WebView access delegate
-        _shortcutService = new ShortcutService(
-            ViewModel, 
-            () => _isWebViewInitialized ? MainWebView.CoreWebView2 : null
-        );
+            <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" UseLayoutRounding="True">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="138"/>
+                </Grid.ColumnDefinitions>
 
-        // Hook Bookmark Shortcut (Ctrl+D)
-        _shortcutService.BookmarkRequested += () => {
-            if (ViewModel.SelectedTab != null)
-                ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
-        };
+                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-        // Sync Omnibox Icon when URL/Tab changes
-        ViewModel.PropertyChanged += (s, e) => {
-            if (e.PropertyName == nameof(MainViewModel.SelectedTab) || e.PropertyName == nameof(MainViewModel.OmniboxText))
-                UpdateOmniboxIcon();
-        };
+                    <ListView x:Name="TabListView" 
+                              Grid.Column="0"
+                              ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                              SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                              SelectionChanged="TabListView_SelectionChanged"
+                              CanReorderItems="True" AllowDrop="True"
+                              ScrollViewer.HorizontalScrollMode="Auto" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.VerticalScrollMode="Disabled"
+                              Background="Transparent" Padding="0">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsStackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TabViewModel">
+                                <controls:TabItemPresenter 
+                                    Title="{x:Bind Title, Mode=OneWay}"
+                                    ContextRequested="Tab_ContextRequested"
+                                    MiddleClicked="Tab_MiddleClicked"
+                                    CloseClicked="Tab_CloseClicked">
+                                </controls:TabItemPresenter>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
 
-        // Load JavaScript Injectors
-        string shortcutsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js");
-        _shortcutsJs = File.Exists(shortcutsPath) ? File.ReadAllText(shortcutsPath) : "";
+                    <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
+                            Width="28" Height="28" VerticalAlignment="Center" Margin="8,0" 
+                            ToolTipService.ToolTip="New Tab (Ctrl+T)" Foreground="White"/>
+                </Grid>
+            </Grid>
 
-        string tvJsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "tradingview-tweaks.js");
-        _tradingViewJs = File.Exists(tvJsPath) ? File.ReadAllText(tvJsPath) : "";
+            <Grid Grid.Row="1" Padding="8,0,8,0" ColumnSpacing="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Content="🏠" Click="Home_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Home"/>
+                    <Button x:Name="BackButton" Content="←" Click="Back_Click" Width="28" Height="28" Padding="0" IsEnabled="False" ToolTipService.ToolTip="Back"/>
+                    <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" Width="28" Height="28" Padding="0" IsEnabled="False" ToolTipService.ToolTip="Forward"/>
+                    <Button Content="⟳" Click="Reload_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Reload"/>
+                </StackPanel>
 
-        SetupTitleBar();
-        SetupEventHooks();
-        _ = InitializeWebViewAsync();
-    }
+                <Border Grid.Column="2" Background="#303134" CornerRadius="20" Height="32" VerticalAlignment="Center">
+                    <Grid Padding="12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="OmniboxIcon" Grid.Column="0" Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="Omnibox" Grid.Column="1"
+                                 Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                 PlaceholderText="Search Google or type a URL"
+                                 KeyDown="Omnibox_KeyDown"
+                                 Background="Transparent" Foreground="White" BorderThickness="0"
+                                 VerticalAlignment="Center" Padding="0" FontSize="14"/>
+                    </Grid>
+                </Border>
 
-    /// <summary>
-    /// Updates the omnibox icon based on current URL (🔒 for HTTPS, 🔍 otherwise).
-    /// </summary>
-    private void UpdateOmniboxIcon()
-    {
-        string url = ViewModel.OmniboxText ?? "";
-        bool isHttps = url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
-        bool isNewTab = string.IsNullOrWhiteSpace(url) || url == "https://www.google.com";
-        OmniboxIcon.Text = (isHttps && !isNewTab) ? "🔒" : "🔍";
-    }
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="BookmarkButton" Content="☆" Click="Bookmark_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Bookmark (Ctrl+D)"/>
+                    <Button x:Name="DownloadButton" Content="📥" Click="Downloads_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Downloads"/>
+                    <Button x:Name="SettingsButton" Content="️" Click="Settings_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Settings"/>
+                </StackPanel>
+            </Grid>
 
-    private void SetupTitleBar()
-    {
-        ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
-        var appWindow = this.AppWindow;
-        appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-        appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-        appWindow.TitleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
-    }
-
-    private void SetupEventHooks()
-    {
-        // Route raw pointer/keyboard events to ShortcutService
-        RootGrid.PointerPressed += (s, e) => _shortcutService.HandlePointerPressed(e);
-        RootGrid.KeyDown += (s, e) => _shortcutService.HandleUiKeyDown(e);
-        
-        // Delegate ViewModel actions to WebView
-        ViewModel.NavigationRequested += url => { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate(url); };
-        ViewModel.FocusOmniboxRequested += () => { Omnibox.Focus(FocusState.Programmatic); Omnibox.SelectAll(); };
-        ViewModel.ToggleFullscreenRequested += ToggleFullscreen;
-        ViewModel.OpenDevToolsRequested += () => { if (_isWebViewInitialized) MainWebView.CoreWebView2.OpenDevToolsWindow(); };
-
-        // Persist session on window close
-        this.AppWindow.Closing += (s, e) => {
-            if (ViewModel.SelectedTab != null)
-                _sessionService.SaveSession(ViewModel.Tabs, ViewModel.SelectedTab.Id.ToString());
-        };
-    }
-
-    private async Task InitializeWebViewAsync()
-    {
-        try
-        {
-            string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
-            Directory.CreateDirectory(userDataFolder);
-
-            // Bypass compiler overload bugs using official WebView2 environment variables
-            Environment.SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", userDataFolder);
-            Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "--enable-features=msWebView2CodeCache --force-gpu-rasterization");
-            Environment.SetEnvironmentVariable("WEBVIEW2_LANGUAGE", "en-US");
-
-            await MainWebView.EnsureCoreWebView2Async();
-            
-            // Configure WebView2 settings
-            var settings = MainWebView.CoreWebView2.Settings;
-            settings.IsStatusBarEnabled = false;
-            settings.AreDefaultContextMenusEnabled = true;
-            settings.IsGeneralAutofillEnabled = false;
-            settings.IsPasswordAutosaveEnabled = false;
-            settings.IsPinchZoomEnabled = false;
-            settings.IsSwipeNavigationEnabled = false;
-            
-            // Attach WebView2 event handlers
-            MainWebView.CoreWebView2.DocumentTitleChanged += CoreWebView2_DocumentTitleChanged;
-            MainWebView.CoreWebView2.NavigationStarting += CoreWebView2_NavigationStarting;
-            MainWebView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
-            MainWebView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
-            
-            // Initialize Download Manager & Navigation Service (pass 'this' for FolderPicker bridge)
-            _downloadService.Initialize(MainWebView.CoreWebView2);
-            _navService = new WebViewNavigationService(_downloadService, MainWebView.CoreWebView2, this);
-            
-            // Inject JS scripts
-            if (!string.IsNullOrEmpty(_shortcutsJs))
-                await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_shortcutsJs);
-            if (!string.IsNullOrEmpty(_tradingViewJs))
-                await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_tradingViewJs);
-
-            _isWebViewInitialized = true;
-            LoggingService.Log("WebView2 initialized successfully.");
-
-            // Session Restore Logic
-            bool shouldRestore = SettingsService.Get("RestoreSession", "true") == "true";
-            if (shouldRestore)
-            {
-                var restoredTabs = _sessionService.LoadSession(out string? activeId);
-                ViewModel.InitializeSession(restoredTabs, activeId);
-            }
-            else
-            {
-                ViewModel.InitializeSession(new List<TabViewModel>(), null);
-            }
-            
-            RefreshSidebar();
-            UpdateOmniboxIcon();
-        }
-        catch (Exception ex)
-        {
-            LoggingService.Error("WebView2 Init Error", ex);
-        }
-    }
-
-    /// <summary>
-    /// Refreshes Sidebar ListViews with latest SQLite data.
-    /// </summary>
-    private void RefreshSidebar()
-    {
-        var b = _hbService.GetBookmarks();
-        var h = _hbService.GetHistory();
-        
-        var bookmarkList = new List<ViewModels.BookmarkItem>();
-        foreach(var item in b) bookmarkList.Add(new ViewModels.BookmarkItem { Url = item.Url, Title = item.Title });
-        BookmarkListView.ItemsSource = bookmarkList;
-
-        var historyList = new List<ViewModels.HistoryItem>();
-        foreach(var item in h) historyList.Add(new ViewModels.HistoryItem { Url = item.Url, Title = item.Title, VisitTime = item.Time });
-        HistoryListView.ItemsSource = historyList;
-
-        if (ViewModel.SelectedTab != null)
-        {
-            bool isBookmarked = _hbService.IsBookmarked(ViewModel.SelectedTab.Url);
-            BookmarkButton.Content = isBookmarked ? "★" : "☆";
-        }
-    }
-
-    /// <summary>
-    /// Toggles bookmark status for current URL.
-    /// </summary>
-    private void ToggleBookmark(string url, string title)
-    {
-        if (string.IsNullOrEmpty(url)) return;
-        bool isBookmarked = _hbService.IsBookmarked(url);
-        
-        if (isBookmarked) { _hbService.RemoveBookmark(url); BookmarkButton.Content = "☆"; }
-        else { _hbService.AddBookmark(url, title); BookmarkButton.Content = "★"; }
-        
-        RefreshSidebar();
-    }
-
-    // --- Sidebar Selection Handlers ---
-    private void BookmarkListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (BookmarkListView.SelectedItem is ViewModels.BookmarkItem item)
-        {
-            ViewModel.NavigateToUrlCommand.Execute(item.Url);
-            MainSplitView.IsPaneOpen = false; 
-            BookmarkListView.SelectedItem = null;
-        }
-    }
-
-    private void HistoryListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (HistoryListView.SelectedItem is ViewModels.HistoryItem item)
-        {
-            ViewModel.NavigateToUrlCommand.Execute(item.Url);
-            MainSplitView.IsPaneOpen = false;
-            HistoryListView.SelectedItem = null;
-        }
-    }
-
-    // --- UI Click Handlers ---
-    private void Bookmark_Click(object sender, RoutedEventArgs e) { if (ViewModel.SelectedTab != null) ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title); }
-    private void Downloads_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:downloads"); }
-    private void Settings_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:settings"); }
-    private void Back_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoBack) MainWebView.CoreWebView2.GoBack(); }
-    private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
-    private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
-    private void Home_Click(object sender, RoutedEventArgs e) { ViewModel.GoHomeCommand.Execute(null); }
-    private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
-
-    // --- Tab Interaction Handlers ---
-    private void Tab_MiddleClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
-    private void Tab_CloseClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
-
-    // --- Async Web Message Router ---
-    private async void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
-    {
-        string? msg = args.TryGetWebMessageAsString();
-        if (msg == null) return;
-
-        if (msg.StartsWith("SHORTCUT:")) 
-            _shortcutService.HandleWebViewMessage(msg);
-        else if (msg.StartsWith("LOG:")) 
-            LoggingService.Log(msg, "WEBVIEW_JS");
-        else if (_navService != null) 
-            await _navService.HandleWebMessageAsync(msg); // Async routing for settings/downloads actions
-    }
-
-    // --- Fullscreen Toggle ---
-    private void ToggleFullscreen()
-    {
-        var presenter = this.AppWindow.Presenter as OverlappedPresenter;
-        if (presenter != null)
-        {
-            if (presenter.State == OverlappedPresenterState.Maximized && !ExtendsContentIntoTitleBar)
-            {
-                presenter.Restore();
-                ExtendsContentIntoTitleBar = true;
-                SetTitleBar(AppTitleBar);
-            }
-            else
-            {
-                ExtendsContentIntoTitleBar = false;
-                SetTitleBar(null);
-                presenter.SetBorderAndTitleBar(false, false);
-                presenter.Maximize();
-            }
-        }
-    }
-
-    // --- WebView State Sync ---
-    private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
-        if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab) oldTab.Url = MainWebView.CoreWebView2.Source;
-        
-        var newTab = ViewModel.SelectedTab;
-        ViewModel.OmniboxText = newTab.Url;
-        if (MainWebView.CoreWebView2.Source != newTab.Url) MainWebView.CoreWebView2.Navigate(newTab.Url);
-        UpdateOmniboxIcon();
-    }
-
-    private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
-    {
-        // Route special URIs (about:settings, about:downloads)
-        if (_navService != null && _navService.HandleSpecialUri(args.Uri))
-        {
-            args.Cancel = true;
-            return;
-        }
-
-        if (ViewModel.SelectedTab != null) 
-        { 
-            ViewModel.OmniboxText = args.Uri; 
-            ViewModel.SelectedTab.Url = args.Uri; 
-            ViewModel.SelectedTab.IsLoading = true; 
-        }
-    }
-
-    private void CoreWebView2_NavigationCompleted(CoreWebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
-    {
-        if (ViewModel.SelectedTab != null) 
-        { 
-            ViewModel.SelectedTab.IsLoading = false; 
-            if (!args.IsSuccess) LoggingService.Error($"Nav Failed: {args.WebErrorStatus}");
-        }
-        
-        // Update nav button states
-        ViewModel.UpdateNavigationState(sender.CanGoBack, sender.CanGoForward);
-
-        // Log successful navigation to history
-        if (args.IsSuccess && ViewModel.SelectedTab != null)
-        {
-            _hbService.AddHistory(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
-            RefreshSidebar();
-        }
-    }
-
-    private void CoreWebView2_DocumentTitleChanged(CoreWebView2 sender, object args)
-    {
-        if (ViewModel.SelectedTab != null) ViewModel.SelectedTab.Title = sender.DocumentTitle;
-    }
-
-    private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
-    {
-        if (e.Key == Windows.System.VirtualKey.Enter) 
-        { 
-            ViewModel.NavigateOmniboxCommand.Execute(null); 
-            e.Handled = true; 
-        }
-    }
-}
+            <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
+                <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
+            </Grid>
+        </Grid>
+    </SplitView>
+</Window>
