@@ -10,8 +10,6 @@ namespace TradingBrowser.Controls
         public TabItemPresenter()
         {
             this.InitializeComponent();
-            this.PointerEntered += (s, e) => VisualStateManager.GoToState(this, "PointerOver", true);
-            this.PointerExited += (s, e) => VisualStateManager.GoToState(this, "Normal", true);
         }
 
         public string Title
@@ -19,9 +17,26 @@ namespace TradingBrowser.Controls
             get { return (string)GetValue(TitleProperty); }
             set { SetValue(TitleProperty, value); }
         }
-
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata("New Tab"));
+
+        // EDGE UI: Active State Property
+        public bool IsActive
+        {
+            get { return (bool)GetValue(IsActiveProperty); }
+            set { SetValue(IsActiveProperty, value); }
+        }
+        public static readonly DependencyProperty IsActiveProperty =
+            DependencyProperty.Register("IsActive", typeof(bool), typeof(TabItemPresenter), new PropertyMetadata(false, OnIsActiveChanged));
+
+        private static void OnIsActiveChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is TabItemPresenter presenter)
+            {
+                bool isActive = (bool)e.NewValue;
+                VisualStateManager.GoToState(presenter, isActive ? "Active" : "Normal", true);
+            }
+        }
 
         public event EventHandler<PointerRoutedEventArgs>? MiddleClicked;
         public new event EventHandler<ContextRequestedEventArgs>? ContextRequested;
@@ -39,7 +54,7 @@ namespace TradingBrowser.Controls
         private void RootGrid_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
             ContextRequested?.Invoke(this, args);
-            args.Handled = true; // FIX 1: Prevents default context menu from stealing the click
+            args.Handled = true; 
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
