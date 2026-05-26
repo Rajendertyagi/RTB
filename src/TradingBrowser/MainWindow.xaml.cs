@@ -20,11 +20,10 @@ namespace TradingBrowser;
 public sealed partial class MainWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
-    
-    // Exposed for XAML x:Bind to access ActiveDownloads
     public DownloadService DownloadManager => _downloadService; 
 
     private bool _isWebViewInitialized;
+    private bool _isSplitPaneActive;
     
     private readonly SessionService _sessionService;
     private readonly ShortcutService _shortcutService;
@@ -82,7 +81,6 @@ public sealed partial class MainWindow : Window
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
             
-            // FIX: Use object initializer for CoreWebView2EnvironmentOptions
             var options = new CoreWebView2EnvironmentOptions
             {
                 AdditionalBrowserArguments = "--enable-features=msWebView2CodeCache --force-gpu-rasterization"
@@ -181,6 +179,57 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    // ==========================================
+    // MULTI-PANE LOGIC
+    // ==========================================
+    private async void SplitPane()
+    {
+        if (_isSplitPaneActive) return;
+        _isSplitPaneActive = true;
+
+        LeftPaneColumn.Width = new GridLength(1, GridUnitType.Star);
+        RightPaneColumn.Width = new GridLength(1, GridUnitType.Star);
+        PaneDivider.Visibility = Visibility.Visible;
+        RightPaneHost.Visibility = Visibility.Visible;
+
+        try
+        {
+            // Initialize Secondary WebView (Uses pre-warmed environment for instant load)
+            await SecondaryWebView.EnsureCoreWebView2Async();
+            SecondaryWebView.CoreWebView2.Navigate("https://www.tradingview.com");
+            LoggingService.Log("Secondary WebView initialized (Split Pane).");
+        }
+        catch (Exception ex)
+        {
+            LoggingService.Error("Secondary WebView Init Error", ex);
+        }
+    }
+
+    private void CollapsePane()
+    {
+        if (!_isSplitPaneActive) return;
+        _isSplitPaneActive = false;
+
+        RightPaneColumn.Width = new GridLength(0);
+        PaneDivider.Visibility = Visibility.Collapsed;
+        RightPaneHost.Visibility = Visibility.Collapsed;
+    }
+
+    private void SplitPane_Click(object sender, RoutedEventArgs e) => SplitPane();
+
+    private void PaneDivider_DragDelta(object sender, DragDeltaEventArgs e)
+    {
+        double newLeftWidth = LeftPaneColumn.Width.Value + e.HorizontalChange;
+        double totalWidth = WebViewHost.ActualWidth - 4; // 4px for divider
+        
+        // Prevent panes from shrinking below 200px
+        if (newLeftWidth > 200 && (totalWidth - newLeftWidth) > 200)
+        {
+            LeftPaneColumn.Width = new GridLength(newLeftWidth, GridUnitType.Pixel);
+            RightPaneColumn.Width = new GridLength(totalWidth - newLeftWidth, GridUnitType.Pixel);
+        }
+    }
+
     private void RefreshSidebar()
     {
         var b = _hbService.GetBookmarks();
@@ -264,6 +313,11 @@ public sealed partial class MainWindow : Window
                 foreach (var t in tabsToClose) ViewModel.CloseTabCommand.Execute(t);
             };
             menu.Items.Add(closeOtherItem);
+
+            // MULTI-PANE: Split Right Context Menu Item
+            var splitItem = new MenuFlyoutItem { Text = "Split Right" };
+            splitItem.Click += (s, args) => SplitPane();
+            menu.Items.Add(splitItem);
 
             menu.SystemBackdrop = new DesktopAcrylicBackdrop();
 
@@ -360,7 +414,19 @@ public sealed partial class MainWindow : Window
         if (ViewModel.SelectedTab != null) 
         { 
             ViewModel.SelectedTab.IsLoading = false; 
-            if (!args.IsSuccess) LoggingService.Error($"Nav Failed: {args.WebErrorStatus}");
+            
+            if (!args.IsSuccess)
+            {
+                if (args.WebErrorStatus == CoreWebView2WebErrorStatus.ConnectionAborted || 
+                    args.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled)
+                {
+                    LoggingService.Log($"Navigation Interrupted by user/action: {args.Uri}", "INFO");
+                }
+                else
+                {
+                    LoggingService.Error($"Nav Failed ({args.WebErrorStatus}): {args.Uri}");
+                }
+            }
         }
         
         ViewModel.UpdateNavigationState(sender.CanGoBack, sender.CanGoForward);
