@@ -49,6 +49,14 @@ public sealed partial class MainWindow : Window
                 ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
         };
 
+        // Sync omnibox icon when tab or URL changes
+        ViewModel.PropertyChanged += (s, e) => {
+            if (e.PropertyName == nameof(MainViewModel.SelectedTab) || e.PropertyName == nameof(MainViewModel.OmniboxText))
+            {
+                UpdateOmniboxIcon();
+            }
+        };
+
         string shortcutsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js");
         _shortcutsJs = File.Exists(shortcutsPath) ? File.ReadAllText(shortcutsPath) : "";
 
@@ -58,6 +66,15 @@ public sealed partial class MainWindow : Window
         SetupTitleBar();
         SetupEventHooks();
         _ = InitializeWebViewAsync();
+    }
+
+    private void UpdateOmniboxIcon()
+    {
+        string url = ViewModel.OmniboxText ?? "";
+        bool isHttps = url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        bool isNewTab = string.IsNullOrWhiteSpace(url) || url == "https://www.google.com";
+        
+        OmniboxIcon.Text = (isHttps && !isNewTab) ? "🔒" : "🔍";
     }
 
     private void SetupTitleBar()
@@ -135,10 +152,34 @@ public sealed partial class MainWindow : Window
             }
             
             RefreshSidebar();
+            UpdateOmniboxIcon();
         }
         catch (Exception ex)
         {
             LoggingService.Error("WebView2 Init Error", ex);
+        }
+    }
+
+    // --- Context Menu Handler (Dynamic Creation to Avoid XAML Scope Crashes) ---
+    private void Tab_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
+        {
+            var flyout = new MenuFlyout();
+            
+            flyout.Items.Add(new MenuFlyoutItem { Text = "New Tab", Command = ViewModel.AddTabCommand });
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Duplicate", Command = ViewModel.DuplicateTabCommand, CommandParameter = tab });
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Pin Tab", Command = ViewModel.PinTabCommand, CommandParameter = tab });
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Close", Command = ViewModel.CloseTabCommand, CommandParameter = tab });
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Close Other Tabs", Command = ViewModel.CloseOtherTabsCommand, CommandParameter = tab });
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Close Tabs to the Right", Command = ViewModel.CloseTabsToRightCommand, CommandParameter = tab });
+            flyout.Items.Add(new MenuFlyoutSeparator());
+            flyout.Items.Add(new MenuFlyoutItem { Text = "Reopen Closed Tab", Command = ViewModel.ReopenClosedTabCommand });
+
+            flyout.ShowAt(el, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
+            args.Handled = true;
         }
     }
 
@@ -165,20 +206,9 @@ public sealed partial class MainWindow : Window
     private void ToggleBookmark(string url, string title)
     {
         if (string.IsNullOrEmpty(url)) return;
-        
         bool isBookmarked = _hbService.IsBookmarked(url);
-        
-        if (isBookmarked)
-        {
-            _hbService.RemoveBookmark(url);
-            BookmarkButton.Content = "☆";
-        }
-        else
-        {
-            _hbService.AddBookmark(url, title);
-            BookmarkButton.Content = "★";
-        }
-        
+        if (isBookmarked) { _hbService.RemoveBookmark(url); BookmarkButton.Content = "☆"; }
+        else { _hbService.AddBookmark(url, title); BookmarkButton.Content = "★"; }
         RefreshSidebar();
     }
 
@@ -202,60 +232,25 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void Bookmark_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.SelectedTab != null)
-            ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
-    }
-    
-    private void Downloads_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isWebViewInitialized)
-            MainWebView.CoreWebView2.Navigate("about:downloads");
-    }
-
-    private void Settings_Click(object sender, RoutedEventArgs e)
-    {
-        if (_isWebViewInitialized)
-            MainWebView.CoreWebView2.Navigate("about:settings");
-    }
-    
+    private void Bookmark_Click(object sender, RoutedEventArgs e) { if (ViewModel.SelectedTab != null) ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title); }
+    private void Downloads_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:downloads"); }
+    private void Settings_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:settings"); }
     private void Back_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoBack) MainWebView.CoreWebView2.GoBack(); }
     private void Forward_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized && MainWebView.CoreWebView2.CanGoForward) MainWebView.CoreWebView2.GoForward(); }
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
     private void Home_Click(object sender, RoutedEventArgs e) { ViewModel.GoHomeCommand.Execute(null); }
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
 
-    // --- Tab Interaction Handlers ---
-    private void Tab_MiddleClicked(object sender, RoutedEventArgs e)
-    {
-        // Middle-click close: extract TabViewModel from DataContext
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
-        {
-            ViewModel.CloseTabCommand.Execute(tab);
-        }
-    }
-
-    private void Tab_CloseClicked(object sender, RoutedEventArgs e)
-    {
-        // X button close
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
-        {
-            ViewModel.CloseTabCommand.Execute(tab);
-        }
-    }
+    private void Tab_MiddleClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
+    private void Tab_CloseClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
 
     private void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
     {
         string? msg = args.TryGetWebMessageAsString();
         if (msg == null) return;
-
-        if (msg.StartsWith("SHORTCUT:"))
-            _shortcutService.HandleWebViewMessage(msg);
-        else if (msg.StartsWith("LOG:"))
-            LoggingService.Log(msg, "WEBVIEW_JS");
-        else if (_navService != null)
-            _navService.HandleWebMessage(msg);
+        if (msg.StartsWith("SHORTCUT:")) _shortcutService.HandleWebViewMessage(msg);
+        else if (msg.StartsWith("LOG:")) LoggingService.Log(msg, "WEBVIEW_JS");
+        else if (_navService != null) _navService.HandleWebMessage(msg);
     }
 
     private void ToggleFullscreen()
@@ -264,18 +259,9 @@ public sealed partial class MainWindow : Window
         if (presenter != null)
         {
             if (presenter.State == OverlappedPresenterState.Maximized && !ExtendsContentIntoTitleBar)
-            {
-                presenter.Restore();
-                ExtendsContentIntoTitleBar = true;
-                SetTitleBar(AppTitleBar);
-            }
+            { presenter.Restore(); ExtendsContentIntoTitleBar = true; SetTitleBar(AppTitleBar); }
             else
-            {
-                ExtendsContentIntoTitleBar = false;
-                SetTitleBar(null);
-                presenter.SetBorderAndTitleBar(false, false);
-                presenter.Maximize();
-            }
+            { ExtendsContentIntoTitleBar = false; SetTitleBar(null); presenter.SetBorderAndTitleBar(false, false); presenter.Maximize(); }
         }
     }
 
@@ -287,55 +273,26 @@ public sealed partial class MainWindow : Window
         var newTab = ViewModel.SelectedTab;
         ViewModel.OmniboxText = newTab.Url;
         if (MainWebView.CoreWebView2.Source != newTab.Url) MainWebView.CoreWebView2.Navigate(newTab.Url);
-        
-        bool isBookmarked = _hbService.IsBookmarked(newTab.Url);
-        BookmarkButton.Content = isBookmarked ? "★" : "☆";
+        UpdateOmniboxIcon();
     }
 
     private void CoreWebView2_NavigationStarting(CoreWebView2 sender, CoreWebView2NavigationStartingEventArgs args)
     {
-        if (_navService != null && _navService.HandleSpecialUri(args.Uri))
-        {
-            args.Cancel = true;
-            return;
-        }
-
-        if (ViewModel.SelectedTab != null) 
-        { 
-            ViewModel.OmniboxText = args.Uri; 
-            ViewModel.SelectedTab.Url = args.Uri; 
-            ViewModel.SelectedTab.IsLoading = true; 
-        }
+        if (_navService != null && _navService.HandleSpecialUri(args.Uri)) { args.Cancel = true; return; }
+        if (ViewModel.SelectedTab != null) { ViewModel.OmniboxText = args.Uri; ViewModel.SelectedTab.Url = args.Uri; ViewModel.SelectedTab.IsLoading = true; }
     }
 
     private void CoreWebView2_NavigationCompleted(CoreWebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
     {
-        if (ViewModel.SelectedTab != null) 
-        { 
-            ViewModel.SelectedTab.IsLoading = false; 
-            if (!args.IsSuccess) LoggingService.Error($"Nav Failed: {args.WebErrorStatus}");
-        }
-        
+        if (ViewModel.SelectedTab != null) { ViewModel.SelectedTab.IsLoading = false; if (!args.IsSuccess) LoggingService.Error($"Nav Failed: {args.WebErrorStatus}"); }
         ViewModel.UpdateNavigationState(sender.CanGoBack, sender.CanGoForward);
-
-        if (args.IsSuccess && ViewModel.SelectedTab != null)
-        {
-            _hbService.AddHistory(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
-            RefreshSidebar();
-        }
+        if (args.IsSuccess && ViewModel.SelectedTab != null) { _hbService.AddHistory(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title); RefreshSidebar(); }
     }
 
-    private void CoreWebView2_DocumentTitleChanged(CoreWebView2 sender, object args)
-    {
-        if (ViewModel.SelectedTab != null) ViewModel.SelectedTab.Title = sender.DocumentTitle;
-    }
+    private void CoreWebView2_DocumentTitleChanged(CoreWebView2 sender, object args) { if (ViewModel.SelectedTab != null) ViewModel.SelectedTab.Title = sender.DocumentTitle; }
 
     private void Omnibox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.Enter) 
-        { 
-            ViewModel.NavigateOmniboxCommand.Execute(null); 
-            e.Handled = true; 
-        }
+        if (e.Key == Windows.System.VirtualKey.Enter) { ViewModel.NavigateOmniboxCommand.Execute(null); e.Handled = true; }
     }
 }
