@@ -1,52 +1,164 @@
-<UserControl
-    x:Class="TradingBrowser.Controls.TabItemPresenter"
+<Window
+    x:Class="TradingBrowser.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:TradingBrowser.ViewModels"
+    xmlns:controls="using:TradingBrowser.Controls"
     mc:Ignorable="d"
-    d:DesignHeight="36" d:DesignWidth="200"
-    PointerPressed="UserControl_PointerPressed"
-    ContextRequested="UserControl_ContextRequested">
+    Title="TradingBrowser">
 
-    <Grid x:Name="RootGrid" Background="Transparent" Padding="8,0" MinWidth="120" MaxWidth="240" Height="36">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
+    <!-- SplitView Container: Manages Library Sidebar overlay and Main Content Area -->
+    <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="#202124" CompactPaneLength="0" OpenPaneLength="350">
+        
+        <!-- Left Pane: Bookmarks & History Sidebar -->
+        <SplitView.Pane>
+            <Pivot Title="Library" Margin="10" Foreground="White">
+                <PivotItem Header="Bookmarks">
+                    <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BookmarkItem">
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind Url}" Foreground="Gray" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+                
+                <PivotItem Header="History">
+                    <ListView x:Name="HistoryListView" SelectionMode="Single" SelectionChanged="HistoryListView_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:HistoryItem">
+                                <StackPanel Padding="5">
+                                    <TextBlock Text="{x:Bind Title}" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{x:Bind VisitTime}" Foreground="Gray" FontSize="10"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </PivotItem>
+            </Pivot>
+        </SplitView.Pane>
+        
+        <!-- Main Content Area: Exact Edge Layout Grid -->
+        <Grid x:Name="RootGrid" Background="#202124" UseLayoutRounding="True">
+            <!-- Row 0: Tab Bar (36px) | Row 1: Navigation Bar (40px) | Row 2: WebView2 (Fill) -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36"/>
+                <RowDefinition Height="40"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Trapezoidal Background -->
-        <Path Grid.ColumnSpan="2" Stretch="Fill" Fill="{x:Bind BackgroundBrush, Mode=OneTime}" 
-              Data="M 0,0 L 1,0 L 0.92,1 L 0.08,1 Z" Opacity="0.85" IsHitTestVisible="False"/>
+            <!-- ========================================== -->
+            <!-- TAB BAR (Exact Edge Dimensions & Behavior) -->
+            <!-- ========================================== -->
+            <Grid Grid.Row="0" x:Name="AppTitleBar" Background="Transparent" UseLayoutRounding="True">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>               <!-- Tabs expand to fill available space -->
+                    <ColumnDefinition Width="138"/>             <!-- Reserved space for native Min/Max/Close buttons -->
+                </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Column="0" Text="{x:Bind Title, Mode=OneWay}" 
-                   VerticalAlignment="Center" Margin="8,0,4,0"
-                   Foreground="{x:Bind ForegroundBrush, Mode=OneTime}"
-                   TextTrimming="CharacterEllipsis" FontSize="12" FontFamily="Segoe UI" IsHitTestVisible="False"/>
+                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>        <!-- Tab Strip Container -->
+                        <ColumnDefinition Width="Auto"/>        <!-- New Tab Button -->
+                    </Grid.ColumnDefinitions>
 
-        <Button Grid.Column="1" x:Name="CloseButton" 
-                Width="24" Height="24" Padding="0" Margin="4,0,0,0"
-                Background="Transparent" BorderThickness="0"
-                Click="CloseButton_Click" ToolTipService.ToolTip="Close Tab (Ctrl+W)">
-            <SymbolIcon Symbol="Cancel" Foreground="{x:Bind ForegroundBrush, Mode=OneTime}"/>
-        </Button>
+                    <!-- Tab List View: Horizontal-only scroll, no overflow dropdown, Edge spacing -->
+                    <ListView x:Name="TabListView" 
+                              Grid.Column="0"
+                              ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                              SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                              SelectionChanged="TabListView_SelectionChanged"
+                              CanReorderItems="True" AllowDrop="True"
+                              ScrollViewer.HorizontalScrollMode="Auto" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.VerticalScrollMode="Disabled"
+                              Background="Transparent" Padding="0">
+                        <ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <ItemsStackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TabViewModel">
+                                <!-- Custom Trapezoidal Tab Control -->
+                                <!-- Middle-click closes tab | Right-click opens full context menu -->
+                                <controls:TabItemPresenter 
+                                    Title="{x:Bind Title, Mode=OneWay}"
+                                    ContextRequested="Tab_ContextRequested"
+                                    MiddleClicked="Tab_MiddleClicked"
+                                    CloseClicked="Tab_CloseClicked">
+                                </controls:TabItemPresenter>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
 
-        <!-- INSTANT Transitions (No Animations) -->
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup x:Name="CommonStates">
-                <VisualState x:Name="Normal"/>
-                <VisualState x:Name="PointerOver">
-                    <VisualState.Setters>
-                        <Setter Target="RootGrid.Background" Value="#3C4043"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="Selected">
-                    <VisualState.Setters>
-                        <Setter Target="RootGrid.Background" Value="#202124"/>
-                        <Setter Target="CloseButton.Visibility" Value="Visible"/>
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-    </Grid>
-</UserControl>
+                    <!-- New Tab Button: 28x28px, matches Edge specs, positioned directly after tabs -->
+                    <Button Grid.Column="1" Content="+" Click="NewTab_Click" 
+                            Width="28" Height="28" VerticalAlignment="Center" Margin="8,0" 
+                            ToolTipService.ToolTip="New Tab (Ctrl+T)" Foreground="White"/>
+                </Grid>
+            </Grid>
+
+            <!-- ========================================== -->
+            <!-- NAVIGATION BAR (Exact Edge Layout & Icons) -->
+            <!-- ========================================== -->
+            <Grid Grid.Row="1" Padding="8,0,8,0" ColumnSpacing="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/> <!-- Left Nav Buttons -->
+                    <ColumnDefinition Width="12"/>   <!-- Group Spacing (Edge standard) -->
+                    <ColumnDefinition Width="*"/>    <!-- Omnibox (Flexes to fill) -->
+                    <ColumnDefinition Width="12"/>   <!-- Group Spacing -->
+                    <ColumnDefinition Width="Auto"/> <!-- Right Controls -->
+                </Grid.ColumnDefinitions>
+                
+                <!-- Left Navigation Buttons: 28x28px, 4px spacing, 20x20px icons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button Content="" Click="Home_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Home"/>
+                    <Button x:Name="BackButton" Content="←" Click="Back_Click" Width="28" Height="28" Padding="0" IsEnabled="False" ToolTipService.ToolTip="Back"/>
+                    <Button x:Name="ForwardButton" Content="→" Click="Forward_Click" Width="28" Height="28" Padding="0" IsEnabled="False" ToolTipService.ToolTip="Forward"/>
+                    <Button Content="⟳" Click="Reload_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Reload"/>
+                </StackPanel>
+
+                <!-- Omnibox: Rounded container (radius 20px) with dynamic left icon -->
+                <Border Grid.Column="2" Background="#303134" CornerRadius="20" Height="32" VerticalAlignment="Center">
+                    <Grid Padding="12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/> <!-- Dynamic Icon -->
+                            <ColumnDefinition Width="*"/>    <!-- Text Input -->
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Dynamic Icon: 🔒 for HTTPS, 🔍 for new tab/search. Updated via C# PropertyChanged handler -->
+                        <TextBlock x:Name="OmniboxIcon" Grid.Column="0" Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        
+                        <!-- Omnibox Input: Transparent background, 14px Segoe UI, matches Edge dark mode -->
+                        <TextBox x:Name="Omnibox" Grid.Column="1"
+                                 Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                 PlaceholderText="Search Google or type a URL"
+                                 KeyDown="Omnibox_KeyDown"
+                                 Background="Transparent" Foreground="White" BorderThickness="0"
+                                 VerticalAlignment="Center" Padding="0" FontSize="14"/>
+                    </Grid>
+                </Border>
+
+                <!-- Right Controls: Bookmark, Downloads, Settings (28x28px, 4px spacing) -->
+                <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="BookmarkButton" Content="☆" Click="Bookmark_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Bookmark (Ctrl+D)"/>
+                    <Button x:Name="DownloadButton" Content="" Click="Downloads_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Downloads"/>
+                    <Button x:Name="SettingsButton" Content="⚙️" Click="Settings_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Settings"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========================================== -->
+            <!-- WEBVIEW2 HOST (Fills remaining space)      -->
+            <!-- ========================================== -->
+            <Grid Grid.Row="2" x:Name="WebViewHost" Background="#202124">
+                <WebView2 x:Name="MainWebView" DefaultBackgroundColor="Transparent"/>
+            </Grid>
+        </Grid>
+    </SplitView>
+</Window>
