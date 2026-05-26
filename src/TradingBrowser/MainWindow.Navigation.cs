@@ -22,13 +22,14 @@ public sealed partial class MainWindow
     private void SetupOmniboxAnimations()
     {
         Omnibox.GotFocus += (s, e) => {
-            OmniboxBorder.Background = (Brush)Resources["SolidBackgroundFillColorBaseBrush"];
-            OmniboxBorder.BorderBrush = (Brush)Resources["AccentFillColorDefaultBrush"];
+            // FIX: Use Application.Current.Resources for global WinUI 3 theme brushes
+            OmniboxBorder.Background = (Brush)Application.Current.Resources["SolidBackgroundFillColorBaseBrush"];
+            OmniboxBorder.BorderBrush = (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
             OmniboxBorder.BorderThickness = new Thickness(1.5);
         };
         
         Omnibox.LostFocus += (s, e) => {
-            OmniboxBorder.Background = (Brush)Resources["ControlFillColorDefaultBrush"];
+            OmniboxBorder.Background = (Brush)Application.Current.Resources["ControlFillColorDefaultBrush"];
             OmniboxBorder.BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
             OmniboxBorder.BorderThickness = new Thickness(0);
         };
