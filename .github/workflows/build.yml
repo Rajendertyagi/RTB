@@ -2,8 +2,7 @@ name: Build and Release Portable Browser
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   workflow_dispatch:
 
 # Grants the GITHUB_TOKEN permission to create releases and upload assets
@@ -12,7 +11,9 @@ permissions:
 
 # Environment variables to optimize CI/CD and future-proof against Node deprecations
 env:
+  # Forces GitHub Actions to use Node 24, bypassing the Node 20 deprecation (EOL June 16, 2026)
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Suppresses the .NET CLI logo and telemetry for cleaner, slightly faster build logs
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
@@ -20,48 +21,56 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    # Checks out the repository code using the latest v5 action
     - name: Checkout Repository
       uses: actions/checkout@v5
 
+    # Sets up the .NET 10 SDK (Latest Stable LTS as of Nov 2025)
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
+    # Restores NuGet packages and publishes the app as a Framework-Dependent portable build
     - name: Restore & Publish
       run: |
         dotnet restore src/TradingBrowser/TradingBrowser.csproj
-        dotnet publish src/TradingBrowser/TradingBrowser.csproj -c Release -r win-x64 -o ./publish --verbosity detailed
+        dotnet publish src/TradingBrowser/TradingBrowser.csproj -c Release -r win-x64 -o ./publish
 
+    # Downloads the official Microsoft WebView2 Evergreen Bootstrapper to bundle with the portable app
     - name: Download WebView2 Bootstrapper
       shell: pwsh
       run: |
         Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile "./publish/WebView2Bootstrapper.exe"
 
+    # Creates the empty portable data folders that the app will use at runtime
     - name: Create Portable Folders
       shell: pwsh
       run: |
         New-Item -ItemType Directory -Force -Path "./publish/UserData"
         New-Item -ItemType Directory -Force -Path "./publish/logs"
-        New-Item -ItemType Directory -Force -Path "./publish/Downloads"
-        New-Item -ItemType Directory -Force -Path "./publish/Scripts"
 
+    # Packages the published output into a uniquely named ZIP file for the release
     - name: Package Zip
       id: package
       shell: pwsh
       run: |
         $zipName = "TradingBrowser-v${{ github.run_number }}-win-x64.zip"
         Compress-Archive -Path "./publish/*" -DestinationPath "./$zipName"
+        # Exports the ZIP filename to GITHUB_OUTPUT so subsequent steps can reference it
         "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
+    # Uploads the ZIP as a GitHub Actions Artifact (retained for 7 days)
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
         name: TradingBrowser-Portable
         path: ./${{ steps.package.outputs.ZIP_NAME }}
         retention-days: 7
+        # Set to 0 because the file is already a .zip archive; prevents double-compression CPU waste
         compression-level: 0 
 
+    # Uses the native GitHub CLI to create the release, avoiding Node.js action deprecation warnings
     - name: Create GitHub Release
       if: github.ref == 'refs/heads/main'
       shell: bash
