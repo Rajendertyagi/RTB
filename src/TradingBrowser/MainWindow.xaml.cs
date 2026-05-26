@@ -82,7 +82,12 @@ public sealed partial class MainWindow : Window
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
             
-            var options = new CoreWebView2EnvironmentOptions("--enable-features=msWebView2CodeCache --force-gpu-rasterization");
+            // FIX: Use object initializer for CoreWebView2EnvironmentOptions
+            var options = new CoreWebView2EnvironmentOptions
+            {
+                AdditionalBrowserArguments = "--enable-features=msWebView2CodeCache --force-gpu-rasterization"
+            };
+            
             await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             LoggingService.Log("WebView2 Environment pre-warmed successfully.");
         }
@@ -98,7 +103,6 @@ public sealed partial class MainWindow : Window
         bool isHttps = url.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
         bool isNewTab = string.IsNullOrWhiteSpace(url) || url == "https://www.google.com";
         
-        // MASTER PLAN: Fluent UI Glyphs (Lock = \uE72E, Search = \uE721)
         OmniboxIcon.Glyph = (isHttps && !isNewTab) ? "\uE72E" : "\uE721";
     }
 
@@ -261,7 +265,6 @@ public sealed partial class MainWindow : Window
             };
             menu.Items.Add(closeOtherItem);
 
-            // MASTER PLAN: Desktop Acrylic for Transient UI
             menu.SystemBackdrop = new DesktopAcrylicBackdrop();
 
             if (e.TryGetPosition(tabPresenter, out Windows.Foundation.Point point))
