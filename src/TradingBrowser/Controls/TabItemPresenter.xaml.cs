@@ -10,7 +10,6 @@ namespace TradingBrowser.Controls
         public TabItemPresenter()
         {
             this.InitializeComponent();
-            
             this.PointerEntered += (s, e) => VisualStateManager.GoToState(this, "PointerOver", true);
             this.PointerExited += (s, e) => VisualStateManager.GoToState(this, "Normal", true);
         }
@@ -25,10 +24,7 @@ namespace TradingBrowser.Controls
             DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata("New Tab"));
 
         public event EventHandler<PointerRoutedEventArgs>? MiddleClicked;
-        
-        // FIX: Added 'new' keyword to suppress CS0108 warning
         public new event EventHandler<ContextRequestedEventArgs>? ContextRequested;
-        
         public event EventHandler<RoutedEventArgs>? CloseClicked;
 
         private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -43,6 +39,7 @@ namespace TradingBrowser.Controls
         private void RootGrid_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
         {
             ContextRequested?.Invoke(this, args);
+            args.Handled = true; // FIX 1: Prevents default context menu from stealing the click
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
