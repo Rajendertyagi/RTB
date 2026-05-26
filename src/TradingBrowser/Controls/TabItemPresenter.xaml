@@ -6,21 +6,23 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DesignHeight="36" d:DesignWidth="200"
-    PointerPressed="UserControl_PointerPressed">
+    PointerPressed="UserControl_PointerPressed"
+    ContextRequested="UserControl_ContextRequested">
 
-    <Grid x:Name="RootGrid" Background="Transparent" Padding="8,0" MinWidth="120" MaxWidth="240">
+    <Grid x:Name="RootGrid" Background="Transparent" Padding="8,0" MinWidth="120" MaxWidth="240" Height="36">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Trapezoidal Background -->
         <Path Grid.ColumnSpan="2" Stretch="Fill" Fill="{x:Bind BackgroundBrush, Mode=OneTime}" 
               Data="M 0,0 L 1,0 L 0.92,1 L 0.08,1 Z" Opacity="0.85" IsHitTestVisible="False"/>
 
         <TextBlock Grid.Column="0" Text="{x:Bind Title, Mode=OneWay}" 
                    VerticalAlignment="Center" Margin="8,0,4,0"
                    Foreground="{x:Bind ForegroundBrush, Mode=OneTime}"
-                   TextTrimming="CharacterEllipsis" FontSize="12" IsHitTestVisible="False"/>
+                   TextTrimming="CharacterEllipsis" FontSize="12" FontFamily="Segoe UI" IsHitTestVisible="False"/>
 
         <Button Grid.Column="1" x:Name="CloseButton" 
                 Width="24" Height="24" Padding="0" Margin="4,0,0,0"
@@ -29,6 +31,7 @@
             <SymbolIcon Symbol="Cancel" Foreground="{x:Bind ForegroundBrush, Mode=OneTime}"/>
         </Button>
 
+        <!-- INSTANT Transitions (No Animations) -->
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="CommonStates">
                 <VisualState x:Name="Normal"/>
