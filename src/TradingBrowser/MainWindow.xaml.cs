@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media; // Added for DesktopAcrylicBackdrop
 using Microsoft.Web.WebView2.Core;
 using TradingBrowser.ViewModels;
 using TradingBrowser.Services;
@@ -8,6 +9,7 @@ using TradingBrowser.Helpers;
 using TradingBrowser.Controls;
 using System;
 using System.IO;
+using System.Linq; // Added for LINQ in Context Menu
 using System.Threading.Tasks;
 using Microsoft.UI.Windowing;
 using System.Collections.Generic;
@@ -250,8 +252,43 @@ public sealed partial class MainWindow : Window
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
 
     // --- Tab Interaction Handlers ---
-    private void Tab_MiddleClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
-    private void Tab_CloseClicked(object sender, RoutedEventArgs e) { if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); }
+    private void Tab_ContextRequested(object sender, ContextRequestedEventArgs e)
+    {
+        if (sender is TabItemPresenter tabPresenter && tabPresenter.DataContext is TabViewModel tabVM)
+        {
+            var menu = new MenuFlyout();
+            
+            var closeItem = new MenuFlyoutItem { Text = "Close tab" };
+            closeItem.Click += (s, args) => ViewModel.CloseTabCommand.Execute(tabVM);
+            menu.Items.Add(closeItem);
+
+            var closeOtherItem = new MenuFlyoutItem { Text = "Close other tabs" };
+            closeOtherItem.Click += (s, args) => 
+            {
+                var tabsToClose = ViewModel.Tabs.Where(t => t != tabVM).ToList();
+                foreach (var t in tabsToClose) ViewModel.CloseTabCommand.Execute(t);
+            };
+            menu.Items.Add(closeOtherItem);
+
+            // MASTER PLAN: Apply Desktop Acrylic to transient UI (Context Menu)
+            menu.SystemBackdrop = new DesktopAcrylicBackdrop();
+
+            menu.ShowAt(tabPresenter, e.GetPosition(tabPresenter));
+            e.Handled = true;
+        }
+    }
+
+    private void Tab_MiddleClicked(object sender, PointerRoutedEventArgs e) 
+    { 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) 
+            ViewModel.CloseTabCommand.Execute(tab); 
+    }
+    
+    private void Tab_CloseClicked(object sender, RoutedEventArgs e) 
+    { 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) 
+            ViewModel.CloseTabCommand.Execute(tab); 
+    }
 
     // --- Async Web Message Router ---
     private async void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
