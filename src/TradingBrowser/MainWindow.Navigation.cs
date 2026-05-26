@@ -31,7 +31,19 @@ public sealed partial class MainWindow
     private void Reload_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Reload(); }
     private void Home_Click(object sender, RoutedEventArgs e) { ViewModel.GoHomeCommand.Execute(null); }
     
-    private void Settings_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:settings"); }
+    // FIX 5: Native Settings Dialog instead of edge://settings
+    private async void Settings_Click(object sender, RoutedEventArgs e) 
+    { 
+        var dialog = new ContentDialog
+        {
+            Title = "Settings",
+            Content = "Native settings panel coming soon.\n\n(WebView2 blocks edge:// URIs for security reasons).",
+            CloseButtonText = "Ok",
+            XamlRoot = RootGrid.XamlRoot
+        };
+        await dialog.ShowAsync();
+    }
+    
     private void Downloads_Click(object sender, RoutedEventArgs e) { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate("about:downloads"); }
 
     private void ToggleFullscreen()
