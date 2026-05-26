@@ -31,6 +31,12 @@
     <!-- Strips all non-English resource DLLs to minimize disk footprint -->
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages> 
     
+    <!-- MASTER PLAN: PublishReadyToRun (R2R) for fast CI/CD cold starts -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    
+    <!-- MASTER PLAN: AOT Compatibility (Pairs with the MVVM Toolkit partial properties fix) -->
+    <IsAotCompatible>true</IsAotCompatible>
+    
     <!-- App Details -->
     <AssemblyName>TradingBrowser</AssemblyName>
     <Version>1.0.0</Version>
@@ -39,6 +45,7 @@
   <ItemGroup>
     <!-- Exact package versions requested -->
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.1.3" />
+    <!-- MASTER PLAN: Evergreen Runtime (Standard package automatically uses Windows Evergreen runtime) -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3967.48" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
