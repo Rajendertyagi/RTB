@@ -2,7 +2,7 @@ using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using TradingBrowser.Services; // FIXED: Points to the correct Services folder
+using TradingBrowser.Services; // Required for LoggingService
 
 namespace TradingBrowser;
 
@@ -41,6 +41,9 @@ public sealed partial class MainWindow
     }
 
     private void SplitPane_Click(object sender, RoutedEventArgs e) => SplitPane();
+    
+    // FIX: Handler for the new Close button in the split pane header
+    private void CollapsePane_Click(object sender, RoutedEventArgs e) => CollapsePane();
 
     private void PaneDivider_DragDelta(object sender, DragDeltaEventArgs e)
     {
