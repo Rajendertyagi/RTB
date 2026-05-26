@@ -18,7 +18,9 @@ public sealed partial class MainWindow
             string userDataFolder = Path.Combine(AppContext.BaseDirectory, "UserData", "Profile");
             Directory.CreateDirectory(userDataFolder);
             
-            await CoreWebView2Environment.CreateAsync(null, userDataFolder);
+            // FIX: Explicitly instantiate options to satisfy the specific SDK version compiler
+            var options = new CoreWebView2EnvironmentOptions();
+            await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             LoggingService.Log("WebView2 Environment pre-warmed successfully.");
         }
         catch (Exception ex)
@@ -113,14 +115,17 @@ public sealed partial class MainWindow
             
             if (!args.IsSuccess)
             {
+                // FIX: Use sender.Source instead of args.Uri (which doesn't exist on CompletedEventArgs)
+                string currentUrl = sender.Source;
+
                 if (args.WebErrorStatus == CoreWebView2WebErrorStatus.ConnectionAborted || 
                     args.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled)
                 {
-                    LoggingService.Log($"Navigation Interrupted by user/action: {args.Uri}", "INFO");
+                    LoggingService.Log($"Navigation Interrupted by user/action: {currentUrl}", "INFO");
                 }
                 else
                 {
-                    LoggingService.Error($"Nav Failed ({args.WebErrorStatus}): {args.Uri}");
+                    LoggingService.Error($"Nav Failed ({args.WebErrorStatus}): {currentUrl}");
                 }
             }
         }
