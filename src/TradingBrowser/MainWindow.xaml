@@ -65,10 +65,12 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- TILING FIX: Added SelectionMode="Extended" for Ctrl+Click -->
                     <ListView x:Name="TabListView" Grid.Column="0"
                               ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
                               SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
                               SelectionChanged="TabListView_SelectionChanged"
+                              SelectionMode="Extended"
                               CanReorderItems="True" AllowDrop="True"
                               ScrollViewer.HorizontalScrollMode="Auto" 
                               ScrollViewer.HorizontalScrollBarVisibility="Hidden"
@@ -90,7 +92,6 @@
                         </ListView.ItemTemplate>
                     </ListView>
 
-                    <!-- FIX 3: New Tab Icon -->
                     <Button Grid.Column="1" Click="NewTab_Click" 
                             Width="28" Height="28" VerticalAlignment="Center" Margin="8,0" 
                             ToolTipService.ToolTip="New Tab (Ctrl+T)" Background="Transparent" BorderThickness="0">
@@ -108,7 +109,6 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- FIX 6: Removed Library Button -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <Button Click="Home_Click" Width="28" Height="28" Padding="0" ToolTipService.ToolTip="Home" Background="Transparent" BorderThickness="0">
                         <FontIcon Glyph="&#xE80F;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
@@ -124,7 +124,6 @@
                     </Button>
                 </StackPanel>
 
-                <!-- FIX 2 & 4: Omnibox Alignment and Colors -->
                 <Border Grid.Column="2" Background="{ThemeResource ControlFillColorDefaultBrush}" CornerRadius="16" Height="32" VerticalAlignment="Center">
                     <Grid Padding="12,0">
                         <Grid.ColumnDefinitions>
@@ -202,7 +201,6 @@
                 </StackPanel>
             </Grid>
 
-            <!-- FIX 4 & 7: Split Pane Host with Header -->
             <Grid Grid.Row="2" x:Name="WebViewHost" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" x:Name="LeftPaneColumn"/>
@@ -220,7 +218,6 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <!-- FIX 7: Right Pane Header with Close Button -->
                     <Border Grid.Row="0" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
                         <Button Click="CollapsePane_Click" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="4" Width="24" Height="24" Padding="0" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Close Split">
                             <FontIcon Glyph="&#xE711;" FontSize="12" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
