@@ -1,64 +1,53 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Windows.UI;
-using System;
 
-namespace TradingBrowser.Controls;
-
-public sealed partial class TabItemPresenter : UserControl
+namespace TradingBrowser.Controls
 {
-    public static readonly DependencyProperty TitleProperty = 
-        DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata(string.Empty));
-    public static readonly DependencyProperty IsSelectedProperty = 
-        DependencyProperty.Register("IsSelected", typeof(bool), typeof(TabItemPresenter), new PropertyMetadata(false, OnIsSelectedChanged));
-    public static readonly DependencyProperty IsPinnedProperty = 
-        DependencyProperty.Register("IsPinned", typeof(bool), typeof(TabItemPresenter), new PropertyMetadata(false));
-
-    public string Title { get => (string)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
-    public bool IsSelected { get => (bool)GetValue(IsSelectedProperty); set => SetValue(IsSelectedProperty, value); }
-    public bool IsPinned { get => (bool)GetValue(IsPinnedProperty); set => SetValue(IsPinnedProperty, value); }
-
-    // Public for safe x:Bind resolution
-    public SolidColorBrush BackgroundBrush => IsSelected 
-        ? new SolidColorBrush(Color.FromArgb(255, 32, 33, 36)) 
-        : new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
-        
-    public SolidColorBrush ForegroundBrush => IsSelected 
-        ? new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)) 
-        : new SolidColorBrush(Color.FromArgb(255, 154, 160, 166));
-
-    public event RoutedEventHandler? MiddleClicked;
-    public event RoutedEventHandler? CloseClicked;
-    public event ContextRequestedEventHandler? ContextRequested;
-
-    public TabItemPresenter()
+    public sealed partial class TabItemPresenter : UserControl
     {
-        this.InitializeComponent();
-        CloseButton.Visibility = IsSelected ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private static void OnIsSelectedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is TabItemPresenter control)
+        public TabItemPresenter()
         {
-            bool isSelected = (bool)e.NewValue;
-            VisualStateManager.GoToState(control, isSelected ? "Selected" : "Normal", true);
-            control.CloseButton.Visibility = isSelected ? Visibility.Visible : Visibility.Collapsed;
+            this.InitializeComponent();
+            
+            // Handle Hover States for VisualStateManager
+            this.PointerEntered += (s, e) => VisualStateManager.GoToState(this, "PointerOver", true);
+            this.PointerExited += (s, e) => VisualStateManager.GoToState(this, "Normal", true);
+        }
+
+        // Dependency Property required by MainWindow.xaml binding: Title="{x:Bind Title, Mode=OneWay}"
+        public string Title
+        {
+            get { return (string)GetValue(TitleProperty); }
+            set { SetValue(TitleProperty, value); }
+        }
+
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata("New Tab"));
+
+        // Events required by MainWindow.xaml
+        public event EventHandler<TappedRoutedEventArgs> MiddleClicked;
+        public event EventHandler<ContextRequestedEventArgs> ContextRequested;
+        public event EventHandler<RoutedEventArgs> CloseClicked;
+
+        private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
+            {
+                MiddleClicked?.Invoke(this, e);
+                e.Handled = true;
+            }
+        }
+
+        private void RootGrid_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
+        {
+            ContextRequested?.Invoke(this, args);
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            CloseClicked?.Invoke(this, e);
+            e.Handled = true; // Prevents the click from selecting the tab
         }
     }
-
-    private void UserControl_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        var props = e.GetCurrentPoint(this).Properties;
-        if (props.IsMiddleButtonPressed)
-        {
-            e.Handled = true;
-            MiddleClicked?.Invoke(this, new RoutedEventArgs());
-        }
-    }
-
-    private void CloseButton_Click(object sender, RoutedEventArgs e) => CloseClicked?.Invoke(this, new RoutedEventArgs());
-    private void UserControl_ContextRequested(UIElement sender, ContextRequestedEventArgs args) => ContextRequested?.Invoke(sender, args);
 }
