@@ -15,6 +15,18 @@ public sealed partial class MainWindow
 {
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // EDGE UI: Sync Active State for Tab Pills (Triggers the top highlight line)
+        foreach (var item in TabListView.Items)
+        {
+            if (TabListView.ContainerFromItem(item) is ListViewItem container && container.Content is TabViewModel vm)
+            {
+                if (container.ContentTemplateRoot is TabItemPresenter presenter)
+                {
+                    presenter.IsActive = (vm == ViewModel.SelectedTab);
+                }
+            }
+        }
+
         if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
         
         // Prevent MainWebView from reloading if we are just selecting a second tab for tiling
@@ -33,7 +45,7 @@ public sealed partial class MainWindow
 
     private void Tab_ContextRequested(object sender, ContextRequestedEventArgs e)
     {
-        // Get all currently selected tabs
+        // Get all currently selected tabs (for Vivaldi-style tiling)
         var selectedTabs = TabListView.SelectedItems.Cast<TabViewModel>().ToList();
         
         if (sender is TabItemPresenter tabPresenter && tabPresenter.DataContext is TabViewModel tabVM)
