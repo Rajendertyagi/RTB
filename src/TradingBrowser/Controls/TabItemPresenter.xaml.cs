@@ -11,12 +11,10 @@ namespace TradingBrowser.Controls
         {
             this.InitializeComponent();
             
-            // Handle Hover States for VisualStateManager
             this.PointerEntered += (s, e) => VisualStateManager.GoToState(this, "PointerOver", true);
             this.PointerExited += (s, e) => VisualStateManager.GoToState(this, "Normal", true);
         }
 
-        // Dependency Property for Title
         public string Title
         {
             get { return (string)GetValue(TitleProperty); }
@@ -26,9 +24,11 @@ namespace TradingBrowser.Controls
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata("New Tab"));
 
-        // FIX: Added '?' to make events nullable, resolving CS8618
         public event EventHandler<PointerRoutedEventArgs>? MiddleClicked;
-        public event EventHandler<ContextRequestedEventArgs>? ContextRequested;
+        
+        // FIX: Added 'new' keyword to suppress CS0108 warning
+        public new event EventHandler<ContextRequestedEventArgs>? ContextRequested;
+        
         public event EventHandler<RoutedEventArgs>? CloseClicked;
 
         private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
