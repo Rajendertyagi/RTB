@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System;
 
 namespace TradingBrowser.Controls
 {
@@ -15,7 +16,7 @@ namespace TradingBrowser.Controls
             this.PointerExited += (s, e) => VisualStateManager.GoToState(this, "Normal", true);
         }
 
-        // Dependency Property required by MainWindow.xaml binding: Title="{x:Bind Title, Mode=OneWay}"
+        // Dependency Property for Title
         public string Title
         {
             get { return (string)GetValue(TitleProperty); }
@@ -25,8 +26,8 @@ namespace TradingBrowser.Controls
         public static readonly DependencyProperty TitleProperty =
             DependencyProperty.Register("Title", typeof(string), typeof(TabItemPresenter), new PropertyMetadata("New Tab"));
 
-        // Events required by MainWindow.xaml
-        public event EventHandler<TappedRoutedEventArgs> MiddleClicked;
+        // FIX 1: Changed TappedRoutedEventArgs to PointerRoutedEventArgs
+        public event EventHandler<PointerRoutedEventArgs> MiddleClicked;
         public event EventHandler<ContextRequestedEventArgs> ContextRequested;
         public event EventHandler<RoutedEventArgs> CloseClicked;
 
@@ -47,7 +48,7 @@ namespace TradingBrowser.Controls
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             CloseClicked?.Invoke(this, e);
-            e.Handled = true; // Prevents the click from selecting the tab
+            // FIX 2: Removed e.Handled = true; because RoutedEventArgs doesn't support it.
         }
     }
 }
