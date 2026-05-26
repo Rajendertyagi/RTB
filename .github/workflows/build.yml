@@ -6,11 +6,9 @@ on:
       - main
   workflow_dispatch:
 
-# Grants the GITHUB_TOKEN permission to create releases and upload assets
 permissions:
   contents: write
 
-# Environment variables to optimize CI/CD and future-proof against Node deprecations
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   DOTNET_NOLOGO: true
@@ -21,10 +19,10 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup .NET 10
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '10.0.x'
 
@@ -55,11 +53,12 @@ jobs:
         "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: TradingBrowser-Portable
         path: ./${{ steps.package.outputs.ZIP_NAME }}
         retention-days: 7
+        compression-level: 0
 
     - name: Create GitHub Release
       if: github.ref == 'refs/heads/main'
