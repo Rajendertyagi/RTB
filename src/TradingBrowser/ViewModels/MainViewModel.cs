@@ -8,6 +8,15 @@ using TradingBrowser.Helpers;
 
 namespace TradingBrowser.ViewModels;
 
+// NEW: Enum to track the current tiling layout
+public enum TilingLayout
+{
+    None,
+    Horizontal,
+    Vertical,
+    Grid
+}
+
 public partial class MainViewModel : ObservableObject
 {
     [ObservableProperty] private TabViewModel? _selectedTab;
@@ -15,9 +24,16 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _canGoBack;
     [ObservableProperty] private bool _canGoForward;
 
+    // ==========================================
+    // TILING STATE
+    // ==========================================
+    [ObservableProperty] private TilingLayout _currentTilingLayout = TilingLayout.None;
+    public ObservableCollection<TabViewModel> TiledTabs { get; } = [];
+    // ==========================================
+
     public ObservableCollection<TabViewModel> Tabs { get; } = [];
     private readonly Stack<string> _closedTabs = new();
-    private string _searchEngine = "Google"; // Loaded from SettingsService in production
+    private string _searchEngine = "Google"; 
 
     public event Action<string>? NavigationRequested;
     public event Action? FocusOmniboxRequested;
@@ -58,6 +74,10 @@ public partial class MainViewModel : ObservableObject
         _closedTabs.Push(tab.Url);
         int index = Tabs.IndexOf(tab);
         Tabs.Remove(tab);
+
+        // TILING FIX: Remove from tiled tabs if closed
+        if (TiledTabs.Contains(tab)) TiledTabs.Remove(tab);
+        if (TiledTabs.Count < 2) UntileTabs();
 
         if (Tabs.Count == 0) AddTab();
         else SelectedTab = Tabs[Math.Min(index, Tabs.Count - 1)];
@@ -108,6 +128,9 @@ public partial class MainViewModel : ObservableObject
         Tabs.Clear();
         Tabs.Add(tab);
         SelectedTab = tab;
+
+        // TILING FIX: Clear tiling if other tabs are closed
+        UntileTabs();
     }
 
     [RelayCommand]
@@ -120,7 +143,13 @@ public partial class MainViewModel : ObservableObject
         var toClose = Tabs.Skip(index + 1).ToList();
         foreach (var t in toClose) _closedTabs.Push(t.Url);
         
-        foreach (var t in toClose) Tabs.Remove(t);
+        foreach (var t in toClose) 
+        {
+            Tabs.Remove(t);
+            if (TiledTabs.Contains(t)) TiledTabs.Remove(t);
+        }
+
+        if (TiledTabs.Count < 2) UntileTabs();
     }
 
     [RelayCommand]
@@ -185,5 +214,41 @@ public partial class MainViewModel : ObservableObject
     partial void OnSelectedTabChanging(TabViewModel? value)
     {
         if (value != null) OmniboxText = value.Url;
+    }
+
+    // ==========================================
+    // TILING COMMANDS
+    // ==========================================
+    
+    /// <summary>
+    /// Called from the UI when the user selects multiple tabs and requests a tile.
+    /// </summary>
+    public void TileSelectedTabs(IEnumerable<TabViewModel>? selectedTabs)
+    {
+        if (selectedTabs == null || selectedTabs.Count() < 2) return;
+        
+        TiledTabs.Clear();
+        foreach (var tab in selectedTabs)
+        {
+            if (!TiledTabs.Contains(tab)) TiledTabs.Add(tab);
+        }
+        
+        CurrentTilingLayout = TilingLayout.Horizontal; // Default layout
+    }
+
+    [RelayCommand]
+    private void UntileTabs()
+    {
+        TiledTabs.Clear();
+        CurrentTilingLayout = TilingLayout.None;
+    }
+
+    [RelayCommand]
+    private void SetTilingLayout(TilingLayout layout)
+    {
+        if (TiledTabs.Count >= 2)
+        {
+            CurrentTilingLayout = layout;
+        }
     }
 }
