@@ -20,6 +20,10 @@ namespace TradingBrowser;
 public sealed partial class MainWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
+    
+    // Exposed for XAML x:Bind to access ActiveDownloads
+    public DownloadService DownloadManager => _downloadService; 
+
     private bool _isWebViewInitialized;
     
     private readonly SessionService _sessionService;
@@ -67,15 +71,10 @@ public sealed partial class MainWindow : Window
         SetupTitleBar();
         SetupEventHooks();
         
-        // ✅ PRE-WARMING: Start caching the WebView2 environment immediately
         _ = PreWarmWebViewEnvironmentAsync();
         _ = InitializeWebViewAsync();
     }
 
-    /// <summary>
-    /// Pre-warms the WebView2 environment in the background.
-    /// This caches the CoreWebView2Environment so EnsureCoreWebView2Async() is instant.
-    /// </summary>
     private async Task PreWarmWebViewEnvironmentAsync()
     {
         try
@@ -84,7 +83,6 @@ public sealed partial class MainWindow : Window
             Directory.CreateDirectory(userDataFolder);
             
             var options = new CoreWebView2EnvironmentOptions("--enable-features=msWebView2CodeCache --force-gpu-rasterization");
-            // This caches the environment globally for the process
             await CoreWebView2Environment.CreateAsync(null, userDataFolder, options);
             LoggingService.Log("WebView2 Environment pre-warmed successfully.");
         }
@@ -132,7 +130,6 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            // Environment is already pre-warmed, this will now return almost instantly
             await MainWebView.EnsureCoreWebView2Async();
             
             var settings = MainWebView.CoreWebView2.Settings;
