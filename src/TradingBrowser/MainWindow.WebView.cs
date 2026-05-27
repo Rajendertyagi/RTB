@@ -44,10 +44,8 @@ public sealed partial class MainWindow
             // ✅ FIX: Sync navigation state for Back/Forward buttons
             MainWebView.CoreWebView2.HistoryChanged += (s, e) =>
             {
-                ViewModel.UpdateNavigationState(
-                    MainWebView.CoreWebView2.CanGoBack,
-                    MainWebView.CoreWebView2.CanGoForward
-                );
+                ViewModel.CanGoBack = MainWebView.CoreWebView2.CanGoBack;
+                ViewModel.CanGoForward = MainWebView.CoreWebView2.CanGoForward;
             };
 
             MainWebView.CoreWebView2.ProcessFailed += (s, e) => 
@@ -61,6 +59,12 @@ public sealed partial class MainWindow
                 window.addEventListener('unhandledrejection', e => window.chrome.webview.postMessage('PROMISE_ERROR: ' + e.reason));
             ";
             await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(jsErrorCatcher);
+
+            if (!string.IsNullOrEmpty(_shortcutsJs))
+                await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_shortcutsJs);
+
+            if (!string.IsNullOrEmpty(_tradingViewJs))
+                await MainWebView.CoreWebView2.AddScriptToExecuteOnDocumentCreatedAsync(_tradingViewJs);
 
             MainWebView.CoreWebView2.Navigate("https://www.google.com");
             LoggingService.Info("[WebView] Initial navigation triggered.");
