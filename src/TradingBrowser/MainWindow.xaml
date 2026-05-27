@@ -98,14 +98,20 @@
                 </Style>
             </Grid.Resources>
 
-            <!-- ROW 0: Tab Strip - Visible background & proper height -->
-            <Grid Grid.Row="0" x:Name="AppTitleBar" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> 
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- ROW 0: Tab Strip -->
+            <Grid Grid.Row="0" x:Name="AppTitleBar" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" MinHeight="40">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="138"/>
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch" MinHeight="40">
+                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
@@ -176,13 +182,13 @@
                     <Button Grid.Column="1" Click="NewTab_Click" 
                             automation:AutomationProperties.AutomationId="NewTabButton"
                             Style="{StaticResource EdgeToolbarButtonStyle}"
-                            VerticalAlignment="Bottom" Margin="4,0,0,4" ToolTipService.ToolTip="New Tab (Ctrl+T)">
+                            VerticalAlignment="Center" Margin="4,0,0,0" ToolTipService.ToolTip="New Tab (Ctrl+T)">
                         <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
                     </Button>
                 </Grid>
             </Grid>
 
-            <!-- ROW 1: Toolbar & Omnibox - Fixed alignment, spacing, contrast -->
+            <!-- ROW 1: Toolbar & Omnibox -->
             <Border Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="8,6">
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
@@ -208,7 +214,7 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- ✅ FIXED OMNIBOX: Removed invalid TextTrimming, added proper spacing & contrast -->
+                    <!-- ✅ FIXED OMNIBOX -->
                     <Border x:Name="OmniboxBorder" Grid.Column="2" 
                             Background="{ThemeResource ControlFillColorDefaultBrush}" 
                             CornerRadius="6" 
@@ -317,8 +323,10 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <WebView2 x:Name="MainWebView" Grid.Row="0" Grid.Column="0" DefaultBackgroundColor="{ThemeResource SolidBackgroundFillColorBaseBrush}"/>
-                <WebView2 x:Name="SecondaryWebView" Visibility="Collapsed" DefaultBackgroundColor="{ThemeResource SolidBackgroundFillColorBaseBrush}"/>
+                <!-- ✅ FIXED: DefaultBackgroundColor="Transparent" to prevent XamlParseException -->
+                <WebView2 x:Name="MainWebView" Grid.Row="0" Grid.Column="0" DefaultBackgroundColor="Transparent"/>
+                <WebView2 x:Name="SecondaryWebView" Visibility="Collapsed" DefaultBackgroundColor="Transparent"/>
+                
                 <primitives:Thumb x:Name="TilingDivider" Visibility="Collapsed" DragDelta="TilingDivider_DragDelta" Background="{ThemeResource DividerStrokeColorDefaultBrush}"/>
 
                 <Border x:Name="TilingHeader" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="8" Padding="4" CornerRadius="6" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
