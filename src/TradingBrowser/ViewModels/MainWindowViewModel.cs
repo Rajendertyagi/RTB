@@ -8,38 +8,39 @@ namespace TradingBrowser.ViewModels;
 /// ViewModel for MainWindow that handles UI state and commands.
 /// Uses CommunityToolkit.Mvvm for automatic property change notification and command generation.
 /// </summary>
-public partial class MainWindowViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject  // ✅ FIX: Renamed to match XAML bindings
 {
     /// <summary>
     /// The text displayed in the omnibox (address bar).
     /// Observable property automatically notifies UI of changes.
     /// </summary>
+    // ✅ FIX: AOT-safe public partial property
     [ObservableProperty]
-    private string _omniboxText = string.Empty;
+    public partial string OmniboxText { get; set; } = string.Empty;
 
     /// <summary>
     /// Indicates whether the back button should be enabled.
     /// </summary>
     [ObservableProperty]
-    private bool _canGoBack;
+    public partial bool CanGoBack { get; set; }
 
     /// <summary>
     /// Indicates whether the forward button should be enabled.
     /// </summary>
     [ObservableProperty]
-    private bool _canGoForward;
+    public partial bool CanGoForward { get; set; }
 
     /// <summary>
     /// Indicates whether the current page is loading.
     /// </summary>
     [ObservableProperty]
-    private bool _isLoading;
+    public partial bool IsLoading { get; set; }
 
     /// <summary>
     /// The currently selected tab.
     /// </summary>
     [ObservableProperty]
-    private TabViewModel? _selectedTab;
+    public partial TabViewModel? SelectedTab { get; set; }
 
     /// <summary>
     /// Event triggered when navigation is requested from the ViewModel.
@@ -138,7 +139,8 @@ public partial class MainWindowViewModel : ObservableObject
     /// Partial method called automatically when SelectedTab changes.
     /// Updates the omnibox text to match the new tab's URL.
     /// </summary>
-    partial void OnSelectedTabChanged(TabViewModel? value)
+    // ✅ FIX: Correct partial method name (CommunityToolkit.Mvvm generates On{Property}Changing)
+    partial void OnSelectedTabChanging(TabViewModel? value)
     {
         if (value != null) 
             OmniboxText = value.Url;
