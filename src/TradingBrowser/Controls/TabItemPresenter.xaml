@@ -8,9 +8,9 @@
     Height="40" MinWidth="72" MaxWidth="240">
 
     <Grid x:Name="RootGrid" Background="Transparent" Margin="0,4,0,-1" 
-          ContextRequested="RootGrid_ContextRequested"
           PointerEntered="RootGrid_PointerEntered"
-          PointerExited="RootGrid_PointerExited">
+          PointerExited="RootGrid_PointerExited"
+          RightTapped="RootGrid_RightTapped">
         
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="ActiveStates">
