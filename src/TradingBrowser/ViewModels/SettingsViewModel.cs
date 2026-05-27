@@ -15,18 +15,17 @@ public partial class SettingsViewModel : ObservableObject
 {
     /// <summary>
     /// The currently selected index for the Search Engine dropdown.
-    /// The MVVM Source Generator automatically creates a public property 'SelectedSearchEngineIndex' 
-    /// and implements INotifyPropertyChanged for this private field.
+    /// ✅ FIX: Upgraded to AOT-safe partial property to resolve MVVMTK0045.
     /// </summary>
     [ObservableProperty] 
-    private int _selectedSearchEngineIndex;
+    public partial int SelectedSearchEngineIndex { get; set; }
 
     /// <summary>
     /// Boolean state for the "Restore Session on Startup" toggle switch.
-    /// The Source Generator creates a public property 'RestoreSessionOnStartup' from this field.
+    /// ✅ FIX: Upgraded to AOT-safe partial property to resolve MVVMTK0045.
     /// </summary>
     [ObservableProperty] 
-    private bool _restoreSessionOnStartup;
+    public partial bool RestoreSessionOnStartup { get; set; }
 
     /// <summary>
     /// Array of available search engines to bind to the ComboBox ItemsSource in the UI.
