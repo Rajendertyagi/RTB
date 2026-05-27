@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives; // FIX: Added for FlyoutShowOptions
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TradingBrowser.ViewModels;
@@ -26,7 +27,7 @@ public sealed partial class MainWindow
         double availableWidth = TabListView.ActualWidth - 44;
         int tabCount = ViewModel.Tabs.Count;
         double targetWidth = availableWidth / tabCount;
-        double finalWidth = Math.Max(72, Math.Min(240, targetWidth));
+        double finalWidth = System.Math.Max(72, System.Math.Min(240, targetWidth));
 
         foreach (var item in TabListView.Items)
         {
