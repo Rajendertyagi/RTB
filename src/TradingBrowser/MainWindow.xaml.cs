@@ -2,94 +2,125 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using TradingBrowser.ViewModels;
-using TradingBrowser.Controls;
 using TradingBrowser.Services;
-using System.Linq;
-using System.Collections.Specialized;
+using TradingBrowser.Helpers;
+using System;
+using System.IO;
+using Microsoft.UI.Windowing;
 
 namespace TradingBrowser;
 
-public sealed partial class MainWindow
+public sealed partial class MainWindow : Window
 {
-    public void SetupAdaptiveTabScaling()
+    public MainViewModel ViewModel { get; } = new();
+    public DownloadService DownloadManager => _downloadService;
+
+    private bool _isWebViewInitialized;
+    private bool _isSplitPaneActive;
+
+    private readonly SessionService _sessionService;
+    private readonly ShortcutService _shortcutService;
+    private readonly HistoryBookmarkService _hbService;
+    private readonly DownloadService _downloadService;
+
+    private readonly string _shortcutsJs;
+    private readonly string _tradingViewJs;
+
+    public MainWindow()
     {
-        TabListView.SizeChanged += (_, _) => RecalculateTabWidths();
-        ViewModel.Tabs.CollectionChanged += (_, e) =>
-        {
-            LoggingService.Info($"[Tabs] Collection changed. Action: {e.Action}. Count: {ViewModel.Tabs.Count}");
-            RecalculateTabWidths();
+        this.InitializeComponent();
+        RootGrid.DataContext = this;
+
+        if (this.Content is FrameworkElement content)
+            content.RequestedTheme = ElementTheme.Dark;
+
+        _sessionService = new SessionService(App.Db!);
+        _hbService = new HistoryBookmarkService(App.Db!);
+        _downloadService = new DownloadService(App.Db!);
+
+        _shortcutService = new ShortcutService(
+            ViewModel,
+            () => _isWebViewInitialized ? MainWebView.CoreWebView2 : null
+        );
+
+        _shortcutService.BookmarkRequested += () => {
+            if (ViewModel.SelectedTab != null)
+                ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
         };
+
+        ViewModel.PropertyChanged += (s, e) => {
+            if (e.PropertyName == nameof(MainViewModel.SelectedTab) || e.PropertyName == nameof(MainViewModel.OmniboxText))
+                UpdateOmniboxIcon();
+        };
+
+        string shortcutsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js");
+        _shortcutsJs = File.Exists(shortcutsPath) ? File.ReadAllText(shortcutsPath) : "";
+
+        string tvJsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "tradingview-tweaks.js");
+        _tradingViewJs = File.Exists(tvJsPath) ? File.ReadAllText(tvJsPath) : "";
+
+        SetupTitleBar();
+        SetupEventHooks();
+        SetupOmniboxAnimations();
+
+        RootGrid.ActualThemeChanged += RootGrid_ActualThemeChanged;
+        SetupAdaptiveTabScaling();
+        SetupTilingEngine();
+
+        RestoreLastSession();
+
+        _ = InitializeWebViewAsync();
     }
 
-    private void RecalculateTabWidths()
+    private void RestoreLastSession()
     {
-        // ✅ FIX: Do nothing. Tabs are fixed at 240px in XAML ItemContainerStyle.
-    }
-
-    private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        LoggingService.Info($"[Tabs] SelectionChanged fired. Selected: {ViewModel.SelectedTab?.Title ?? "null"}");
-
-        foreach (var item in TabListView.Items)
+        try
         {
-            if (TabListView.ContainerFromItem(item) is ListViewItem container && container.Content is TabViewModel vm)
+            LoggingService.Info("[Session] Attempting to restore last session...");
+            string? activeTabId;
+            var restoredTabs = _sessionService.LoadSession(out activeTabId);
+
+            if (restoredTabs != null && restoredTabs.Count > 0)
             {
-                vm.IsActive = (vm == ViewModel.SelectedTab);
-                if (container.ContentTemplateRoot is TabItemPresenter presenter)
-                {
-                    presenter.IsActive = vm.IsActive;
-                }
+                ViewModel.InitializeSession(restoredTabs, activeTabId);
+                LoggingService.Info($"[Session] Restored {restoredTabs.Count} tabs. Active: {activeTabId ?? "none"}");
+            }
+            else
+            {
+                LoggingService.Info("[Session] No session found. Creating fresh tab.");
+                ViewModel.InitializeSession(new(), null);
             }
         }
-
-        if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
-        if (TabListView.SelectedItems.Count > 1) return;
-
-        if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab)
-            oldTab.Url = MainWebView.CoreWebView2.Source;
-
-        var newTab = ViewModel.SelectedTab;
-        ViewModel.OmniboxText = newTab.Url;
-
-        if (MainWebView.CoreWebView2.Source != newTab.Url) MainWebView.CoreWebView2.Navigate(newTab.Url);
-        UpdateOmniboxIcon();
-
-        bool isBookmarked = _hbService.IsBookmarked(newTab.Url);
-        BookmarkIcon.Glyph = isBookmarked ? "\uE735" : "\uE734";
-    }
-
-    // ✅ FIX: Handled natively by XAML ContextFlyout now. No more C# MenuFlyout creation.
-    private void Tab_CloseRequested(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
+        catch (Exception ex)
         {
-            LoggingService.Info($"[Tabs] ContextFlyout: Close tab {tab.Title}");
-            ViewModel.CloseTabCommand.Execute(tab);
+            LoggingService.Error("[Session] Restore failed", ex);
+            ViewModel.InitializeSession(new(), null);
         }
     }
 
-    private void Tab_CloseOthersRequested(object sender, RoutedEventArgs e)
+    private void SetupTitleBar()
     {
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
-        {
-            LoggingService.Info($"[Tabs] ContextFlyout: Close other tabs (keeping {tab.Title})");
-            foreach (var t in ViewModel.Tabs.Where(t => t != tab).ToList())
-                ViewModel.CloseTabCommand.Execute(t);
-        }
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
+        var appWindow = this.AppWindow;
+        appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        appWindow.TitleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
     }
 
-    private void Tab_CloseClicked(object sender, RoutedEventArgs e)
+    private void SetupEventHooks()
     {
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab)
-        {
-            LoggingService.Info($"[Tabs] Close button clicked on: {tab.Title}");
-            ViewModel.CloseTabCommand.Execute(tab);
-        }
-    }
+        RootGrid.PointerPressed += (s, e) => _shortcutService.HandlePointerPressed(e);
+        RootGrid.KeyDown += (s, e) => _shortcutService.HandleUiKeyDown(e);
 
-    private void NewTab_Click(object sender, RoutedEventArgs e)
-    {
-        LoggingService.Info("[Tabs] NewTab button clicked.");
-        ViewModel.AddTabCommand.Execute(null);
+        ViewModel.NavigationRequested += url => { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate(url); };
+        ViewModel.FocusOmniboxRequested += () => { Omnibox.Focus(FocusState.Programmatic); Omnibox.SelectAll(); };
+        ViewModel.ToggleFullscreenRequested += ToggleFullscreen;
+        ViewModel.OpenDevToolsRequested += () => { if (_isWebViewInitialized) MainWebView.CoreWebView2.OpenDevToolsWindow(); };
+
+        this.AppWindow.Closing += (s, e) => {
+            if (ViewModel.SelectedTab != null)
+                _sessionService.SaveSession(ViewModel.Tabs, ViewModel.SelectedTab.Id.ToString());
+        };
     }
 }
