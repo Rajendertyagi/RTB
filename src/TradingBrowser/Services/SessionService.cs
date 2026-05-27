@@ -1,8 +1,6 @@
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
-using TradingBrowser.Helpers;
-using TradingBrowser.Services;
 using TradingBrowser.ViewModels;
 
 namespace TradingBrowser.Services;
