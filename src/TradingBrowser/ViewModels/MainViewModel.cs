@@ -52,16 +52,95 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand] private void AddTab() { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void ReopenClosedTab() { /* ... existing logic ... */ }
-    [RelayCommand] private void DuplicateTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void PinTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseOtherTabs(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseTabsToRight(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void NavigateOmnibox() { /* ... existing logic ... */ }
-    [RelayCommand] private void GoHome() { /* ... existing logic ... */ }
-    [RelayCommand] private void NavigateToUrl(string url) { /* ... existing logic ... */ }
+    [RelayCommand] 
+    private void AddTab() 
+    { 
+        var newTab = new TabViewModel 
+        { 
+            Id = Guid.NewGuid(), 
+            Title = "New Tab", 
+            Url = "https://www.google.com" 
+        };
+        Tabs.Add(newTab);
+        SelectedTab = newTab;
+    }
+
+    [RelayCommand] 
+    private void CloseTab(TabViewModel? tab) 
+    { 
+        if (tab == null) return;
+        int index = Tabs.IndexOf(tab);
+        Tabs.Remove(tab);
+        
+        if (Tabs.Count == 0) { AddTab(); return; }
+        if (index >= Tabs.Count) index = Tabs.Count - 1;
+        SelectedTab = Tabs[index];
+    }
+
+    [RelayCommand] private void ReopenClosedTab() { if (_closedTabs.Any()) AddTab(); }
+    
+    [RelayCommand] 
+    private void DuplicateTab(TabViewModel? tab) 
+    { 
+        if (tab != null) 
+        { 
+            var t = new TabViewModel { Id = Guid.NewGuid(), Title = tab.Title, Url = tab.Url }; 
+            Tabs.Add(t); 
+            SelectedTab = t; 
+        } 
+    }
+    
+    [RelayCommand] private void PinTab(TabViewModel? tab) { /* Reserved for future */ }
+    
+    [RelayCommand] 
+    private void CloseOtherTabs(TabViewModel? tab) 
+    { 
+        if (tab == null) return; 
+        Tabs.Clear(); 
+        Tabs.Add(tab); 
+        SelectedTab = tab; 
+    }
+    
+    [RelayCommand] 
+    private void CloseTabsToRight(TabViewModel? tab) 
+    { 
+        if (tab == null) return; 
+        int idx = Tabs.IndexOf(tab); 
+        for(int i = Tabs.Count - 1; i > idx; i--) Tabs.RemoveAt(i); 
+    }
+    
+    [RelayCommand] 
+    private void NavigateOmnibox() 
+    { 
+        string text = OmniboxText.Trim();
+        if (string.IsNullOrEmpty(text)) return;
+        
+        string url = text;
+        if (!text.StartsWith("http://") && !text.StartsWith("https://") && !text.Contains("."))
+        {
+            url = $"https://www.google.com/search?q={Uri.EscapeDataString(text)}";
+        }
+        else if (!text.StartsWith("http"))
+        {
+            url = "https://" + text;
+        }
+        
+        NavigationRequested?.Invoke(url);
+    }
+
+    [RelayCommand] 
+    private void GoHome() 
+    { 
+        OmniboxText = "https://www.google.com";
+        NavigationRequested?.Invoke("https://www.google.com");
+    }
+
+    [RelayCommand] 
+    private void NavigateToUrl(string url) 
+    { 
+        OmniboxText = url;
+        NavigationRequested?.Invoke(url);
+    }
 
     public void UpdateNavigationState(bool canGoBack, bool canGoForward)
     {
@@ -69,9 +148,10 @@ public partial class MainViewModel : ObservableObject
         CanGoForward = canGoForward;
     }
 
-    public void NextTab() { /* ... existing logic ... */ }
-    public void PreviousTab() { /* ... existing logic ... */ }
-    public void SwitchToTab(int index) { /* ... existing logic ... */ }
+    public void NextTab() { if (SelectedTab != null) { int i = Tabs.IndexOf(SelectedTab); SelectedTab = Tabs[(i + 1) % Tabs.Count]; } }
+    public void PreviousTab() { if (SelectedTab != null) { int i = Tabs.IndexOf(SelectedTab); SelectedTab = Tabs[(i - 1 + Tabs.Count) % Tabs.Count]; } }
+    public void SwitchToTab(int index) { if (index >= 0 && index < Tabs.Count) SelectedTab = Tabs[index]; }
+    
     public void TriggerFocusOmnibox() => FocusOmniboxRequested?.Invoke();
     public void TriggerToggleFullscreen() => ToggleFullscreenRequested?.Invoke();
     public void TriggerOpenDevTools() => OpenDevToolsRequested?.Invoke();
@@ -83,7 +163,7 @@ public partial class MainViewModel : ObservableObject
     // ==========================================
     public void TileSelection(IEnumerable<TabViewModel> selection, TilingLayout layout)
     {
-        var tabs = selection.Take(2).ToList(); // Vivaldi supports 2+; we cap at 2 for stable WebView2 perf
+        var tabs = selection.Take(2).ToList(); 
         if (tabs.Count < 2) return;
 
         TiledTabs.Clear();
