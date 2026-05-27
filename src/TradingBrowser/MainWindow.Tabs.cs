@@ -7,6 +7,7 @@ using TradingBrowser.ViewModels;
 using TradingBrowser.Controls;
 using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using Windows.Foundation;
 
 namespace TradingBrowser;
@@ -15,7 +16,6 @@ public sealed partial class MainWindow
 {
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        // EDGE UI: Sync Active State for Tab Pills (Triggers the top highlight line)
         foreach (var item in TabListView.Items)
         {
             if (TabListView.ContainerFromItem(item) is ListViewItem container && container.Content is TabViewModel vm)
@@ -28,8 +28,6 @@ public sealed partial class MainWindow
         }
 
         if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
-        
-        // Prevent MainWebView from reloading if we are just selecting a second tab for tiling
         if (TabListView.SelectedItems.Count > 1) return;
 
         if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab) oldTab.Url = MainWebView.CoreWebView2.Source;
@@ -46,20 +44,14 @@ public sealed partial class MainWindow
     private void Tab_ContextRequested(object sender, ContextRequestedEventArgs e)
     {
         var selectedTabs = TabListView.SelectedItems.Cast<TabViewModel>().ToList();
-        
-        // Safely assign tabPresenter to avoid CS0165 unassigned variable error
         TabItemPresenter? tabPresenter = sender as TabItemPresenter;
         
         if (tabPresenter?.DataContext is TabViewModel tabVM)
         {
-            if (!selectedTabs.Contains(tabVM))
-            {
-                selectedTabs = new List<TabViewModel> { tabVM };
-            }
+            if (!selectedTabs.Contains(tabVM)) selectedTabs = new List<TabViewModel> { tabVM };
         }
 
         var menu = new MenuFlyout();
-        
         var closeItem = new MenuFlyoutItem { Text = "Close tab" };
         closeItem.Click += (s, args) => ViewModel.CloseTabCommand.Execute(selectedTabs.LastOrDefault());
         menu.Items.Add(closeItem);
@@ -67,18 +59,16 @@ public sealed partial class MainWindow
         var closeOtherItem = new MenuFlyoutItem { Text = "Close other tabs" };
         closeOtherItem.Click += (s, args) => 
         {
-            var tabsToClose = ViewModel.Tabs.Where(t => !selectedTabs.Contains(t)).ToList();
-            foreach (var t in tabsToClose) ViewModel.CloseTabCommand.Execute(t);
+            foreach (var t in ViewModel.Tabs.Where(t => !selectedTabs.Contains(t))) ViewModel.CloseTabCommand.Execute(t);
         };
         menu.Items.Add(closeOtherItem);
 
-        // TILING LOGIC: Show Tile option if 2+ tabs are selected
         if (selectedTabs.Count >= 2)
         {
             var tileItem = new MenuFlyoutItem { Text = $"Tile {selectedTabs.Count} Tabs" };
             tileItem.Click += (s, args) => 
             {
-                ViewModel.TileSelectedTabs(selectedTabs);
+                ViewModel.TileSelection(selectedTabs, TilingLayout.Horizontal);
                 TileTabs(selectedTabs[0], selectedTabs[1]);
             };
             menu.Items.Add(tileItem);
@@ -91,32 +81,50 @@ public sealed partial class MainWindow
         }
 
         menu.SystemBackdrop = new DesktopAcrylicBackdrop();
-
-        // FIX: Changed UIElement to FrameworkElement to satisfy MenuFlyout.ShowAt() signature
         FrameworkElement targetElement = tabPresenter ?? (FrameworkElement)RootGrid;
-
-        if (e.TryGetPosition(targetElement, out Point point))
-        {
-            menu.ShowAt(targetElement, new FlyoutShowOptions { Position = point });
-        }
-        else
-        {
-            menu.ShowAt(targetElement);
-        }
+        if (e.TryGetPosition(targetElement, out Point point)) menu.ShowAt(targetElement, new FlyoutShowOptions { Position = point });
+        else menu.ShowAt(targetElement);
         e.Handled = true;
     }
 
     private void Tab_MiddleClicked(object sender, PointerRoutedEventArgs e) 
     { 
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) 
-            ViewModel.CloseTabCommand.Execute(tab); 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); 
     }
     
     private void Tab_CloseClicked(object sender, RoutedEventArgs e) 
     { 
-        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) 
-            ViewModel.CloseTabCommand.Execute(tab); 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); 
     }
 
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
+
+    // ==========================================
+    // ADAPTIVE TAB WIDTH SCALING
+    // ==========================================
+    public void SetupAdaptiveTabScaling()
+    {
+        TabListView.SizeChanged += (_, _) => RecalculateTabWidths();
+        ViewModel.Tabs.CollectionChanged += (_, _) => RecalculateTabWidths();
+    }
+
+    private void RecalculateTabWidths()
+    {
+        if (TabListView.ActualWidth <= 0 || ViewModel.Tabs.Count == 0) return;
+
+        double availableWidth = TabListView.ActualWidth - 44; // 44px buffer for New Tab button + padding
+        int tabCount = ViewModel.Tabs.Count;
+        double targetWidth = availableWidth / tabCount;
+        double finalWidth = Math.Max(72, Math.Min(240, targetWidth)); // Clamp 72px-240px
+
+        foreach (var item in TabListView.Items)
+        {
+            if (TabListView.ContainerFromItem(item) is ListViewItem container)
+            {
+                container.Width = finalWidth;
+                container.MinWidth = 72;
+                container.MaxWidth = 240;
+            }
+        }
+    }
 }
