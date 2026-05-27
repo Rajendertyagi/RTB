@@ -25,10 +25,9 @@ public sealed partial class TabItemPresenter : UserControl
         set => SetValue(IsActiveProperty, value);
     }
 
-    // ✅ FIX: Renamed events to avoid conflicts with base UIElement events
     public event TypedEventHandler<object, PointerRoutedEventArgs>? MiddleClicked;
     public event TypedEventHandler<object, RoutedEventArgs>? CloseClicked;
-    public event TypedEventHandler<object, ContextRequestedEventArgs>? TabContextRequested; // Renamed from ContextRequested
+    public event TypedEventHandler<object, RightTappedRoutedEventArgs>? TabRightTapped;
 
     public TabItemPresenter()
     {
@@ -56,7 +55,6 @@ public sealed partial class TabItemPresenter : UserControl
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         CloseClicked?.Invoke(this, e);
-        // ✅ FIX: Removed e.Handled = true (not available on RoutedEventArgs in WinUI 3)
     }
 
     protected override void OnPointerPressed(PointerRoutedEventArgs e)
@@ -65,15 +63,13 @@ public sealed partial class TabItemPresenter : UserControl
         if (e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed)
         {
             MiddleClicked?.Invoke(this, e);
-            // ✅ FIX: Use PointerRoutedEventArgs.Handled instead
             e.Handled = true;
         }
     }
 
-    // ✅ FIX: Renamed method to match new event name
-    private void RootGrid_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    private void RootGrid_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        TabContextRequested?.Invoke(this, args);
-        args.Handled = true; // ContextRequestedEventArgs DOES have Handled
+        TabRightTapped?.Invoke(this, e);
+        e.Handled = true;
     }
 }
