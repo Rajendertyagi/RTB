@@ -51,16 +51,18 @@
         
         <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" UseLayoutRounding="True">
             <Grid.Resources>
+                <!-- ✅ FEATURE B: RevealBrush Lighting (Hover Glow) -->
                 <Style x:Key="EdgeToolbarButtonStyle" TargetType="Button">
                     <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
                     <Setter Property="Width" Value="32"/>
                     <Setter Property="Height" Value="32"/>
                     <Setter Property="CornerRadius" Value="4"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="Button">
-                                <Grid x:Name="ButtonRootGrid" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+                                <Grid x:Name="ButtonRootGrid" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
                                     <VisualStateManager.VisualStateGroups>
                                         <VisualStateGroup x:Name="CommonStates">
                                             <VisualState x:Name="Normal"/>
@@ -68,6 +70,9 @@
                                                 <Storyboard>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonRootGrid" Storyboard.TargetProperty="Background">
                                                         <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ControlFillColorSecondaryBrush}"/>
+                                                    </ObjectAnimationUsingKeyFrames>
+                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonRootGrid" Storyboard.TargetProperty="BorderBrush">
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ControlStrokeColorDefaultBrush}"/>
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
@@ -214,7 +219,7 @@
                         </Button>
                     </StackPanel>
 
-                    <!-- ✅ FIXED OMNIBOX -->
+                    <!-- Omnibox -->
                     <Border x:Name="OmniboxBorder" Grid.Column="2" 
                             Background="{ThemeResource ControlFillColorDefaultBrush}" 
                             CornerRadius="6" 
@@ -323,7 +328,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- ✅ FIXED: DefaultBackgroundColor="Transparent" to prevent XamlParseException -->
+                <!-- ✅ CRITICAL FIX: DefaultBackgroundColor="Transparent" -->
                 <WebView2 x:Name="MainWebView" Grid.Row="0" Grid.Column="0" DefaultBackgroundColor="Transparent"/>
                 <WebView2 x:Name="SecondaryWebView" Visibility="Collapsed" DefaultBackgroundColor="Transparent"/>
                 
