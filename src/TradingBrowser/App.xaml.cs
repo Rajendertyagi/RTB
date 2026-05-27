@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using TradingBrowser.Services;
-using Microsoft.Data.Sqlite; // FIX: Changed from 'SQLite' to 'Microsoft.Data.Sqlite'
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,8 +8,8 @@ namespace TradingBrowser;
 
 public partial class App : Application
 {
-    // FIX: Changed to SqliteConnection (lowercase 'l')
-    public static SqliteConnection? Db { get; private set; } 
+    // FIX: Changed back to DatabaseService instead of raw SqliteConnection
+    public static DatabaseService? Db { get; private set; } 
     private Window? m_window;
 
     public App()
@@ -28,20 +27,16 @@ public partial class App : Application
         {
             LoggingService.Info("App startup initiated.");
 
-            // --- PASTE YOUR EXACT ORIGINAL DB INITIALIZATION HERE ---
             string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TradingBrowser");
             if (!Directory.Exists(appDataPath)) Directory.CreateDirectory(appDataPath);
             
             string dbPath = Path.Combine(appDataPath, "data.db");
             
-            // FIX: Using Microsoft.Data.Sqlite connection string format
-            Db = new SqliteConnection($"Data Source={dbPath}");
-            Db.Open(); // Microsoft.Data.Sqlite requires explicit Open()
-            
-            // If you had table creation logic, put it here using Db.CreateCommand()
+            // FIX: Instantiate your custom DatabaseService wrapper
+            // (If your original code used a different constructor, paste your exact original line here)
+            Db = new DatabaseService(dbPath); 
             
             LoggingService.Info("Database schema initialized successfully.");
-            // --------------------------------------------------------
 
             m_window = new MainWindow();
             m_window.Activate();
