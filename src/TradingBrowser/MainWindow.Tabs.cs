@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TradingBrowser.ViewModels;
@@ -14,6 +13,32 @@ namespace TradingBrowser;
 
 public sealed partial class MainWindow
 {
+    public void SetupAdaptiveTabScaling()
+    {
+        TabListView.SizeChanged += (_, _) => RecalculateTabWidths();
+        ViewModel.Tabs.CollectionChanged += (_, _) => RecalculateTabWidths();
+    }
+
+    private void RecalculateTabWidths()
+    {
+        if (TabListView.ActualWidth <= 0 || ViewModel.Tabs.Count == 0) return;
+
+        double availableWidth = TabListView.ActualWidth - 44;
+        int tabCount = ViewModel.Tabs.Count;
+        double targetWidth = availableWidth / tabCount;
+        double finalWidth = Math.Max(72, Math.Min(240, targetWidth));
+
+        foreach (var item in TabListView.Items)
+        {
+            if (TabListView.ContainerFromItem(item) is ListViewItem container)
+            {
+                container.Width = finalWidth;
+                container.MinWidth = 72;
+                container.MaxWidth = 240;
+            }
+        }
+    }
+
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         foreach (var item in TabListView.Items)
@@ -73,12 +98,6 @@ public sealed partial class MainWindow
             };
             menu.Items.Add(tileItem);
         }
-        else
-        {
-            var splitItem = new MenuFlyoutItem { Text = "Split Right" };
-            splitItem.Click += (s, args) => SplitPane();
-            menu.Items.Add(splitItem);
-        }
 
         menu.SystemBackdrop = new DesktopAcrylicBackdrop();
         FrameworkElement targetElement = tabPresenter ?? (FrameworkElement)RootGrid;
@@ -98,33 +117,4 @@ public sealed partial class MainWindow
     }
 
     private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
-
-    // ==========================================
-    // ADAPTIVE TAB WIDTH SCALING
-    // ==========================================
-    public void SetupAdaptiveTabScaling()
-    {
-        TabListView.SizeChanged += (_, _) => RecalculateTabWidths();
-        ViewModel.Tabs.CollectionChanged += (_, _) => RecalculateTabWidths();
-    }
-
-    private void RecalculateTabWidths()
-    {
-        if (TabListView.ActualWidth <= 0 || ViewModel.Tabs.Count == 0) return;
-
-        double availableWidth = TabListView.ActualWidth - 44; // 44px buffer for New Tab button + padding
-        int tabCount = ViewModel.Tabs.Count;
-        double targetWidth = availableWidth / tabCount;
-        double finalWidth = Math.Max(72, Math.Min(240, targetWidth)); // Clamp 72px-240px
-
-        foreach (var item in TabListView.Items)
-        {
-            if (TabListView.ContainerFromItem(item) is ListViewItem container)
-            {
-                container.Width = finalWidth;
-                container.MinWidth = 72;
-                container.MaxWidth = 240;
-            }
-        }
-    }
 }
