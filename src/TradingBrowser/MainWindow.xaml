@@ -174,11 +174,11 @@
 
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:TabViewModel">
-                                <!-- ✅ FIX: TabContextRequested (renamed from ContextRequested to avoid conflict) -->
+                                <!-- ✅ FIX: TabRightTapped replaces ContextRequested for reliable right-click handling -->
                                 <controls:TabItemPresenter 
                                     Title="{x:Bind Title, Mode=OneWay}"
                                     IsActive="{x:Bind IsActive, Mode=OneWay}"
-                                    TabContextRequested="Tab_ContextRequested"
+                                    TabRightTapped="Tab_ContextRequested"
                                     MiddleClicked="Tab_MiddleClicked"
                                     CloseClicked="Tab_CloseClicked"/>
                             </DataTemplate>
