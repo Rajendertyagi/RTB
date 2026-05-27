@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml;
 using TradingBrowser.Services;
-using SQLite; // FIX: Added missing namespace for SQLiteConnection
+using Microsoft.Data.Sqlite; // FIX: Changed from 'SQLite' to 'Microsoft.Data.Sqlite'
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,7 +9,8 @@ namespace TradingBrowser;
 
 public partial class App : Application
 {
-    public static SQLiteConnection? Db { get; private set; } // Changed to SQLiteConnection
+    // FIX: Changed to SqliteConnection (lowercase 'l')
+    public static SqliteConnection? Db { get; private set; } 
     private Window? m_window;
 
     public App()
@@ -32,8 +33,12 @@ public partial class App : Application
             if (!Directory.Exists(appDataPath)) Directory.CreateDirectory(appDataPath);
             
             string dbPath = Path.Combine(appDataPath, "data.db");
-            Db = new SQLiteConnection(dbPath);
-            // Db.CreateTable<YourModels>(); 
+            
+            // FIX: Using Microsoft.Data.Sqlite connection string format
+            Db = new SqliteConnection($"Data Source={dbPath}");
+            Db.Open(); // Microsoft.Data.Sqlite requires explicit Open()
+            
+            // If you had table creation logic, put it here using Db.CreateCommand()
             
             LoggingService.Info("Database schema initialized successfully.");
             // --------------------------------------------------------
