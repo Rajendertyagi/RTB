@@ -38,7 +38,11 @@ public sealed partial class TabItemPresenter : UserControl
     {
         if (d is TabItemPresenter presenter)
         {
-            VisualStateManager.GoToState(presenter, presenter.IsActive ? "Active" : "Inactive", true);
+            string state = presenter.IsActive ? "Active" : "Inactive";
+            VisualStateManager.GoToState(presenter, state, false);
+            
+            // Ensure close button matches active state
+            presenter.CloseButton.Visibility = presenter.IsActive ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -70,6 +74,6 @@ public sealed partial class TabItemPresenter : UserControl
     private void RootGrid_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         TabRightTapped?.Invoke(this, e);
-        e.Handled = true;
+        e.Handled = true; // Prevents Windows system menu
     }
 }
