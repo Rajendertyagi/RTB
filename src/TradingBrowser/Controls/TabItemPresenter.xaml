@@ -5,21 +5,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Height="36" Width="240"> <!-- ✅ Fixed Edge-style width -->
+    Height="36" Width="240">
 
-    <Grid x:Name="RootGrid" Background="Transparent">
-        <VisualStateManager.VisualStateGroups>
-            <!-- ✅ FIX: Native PointerOver state (won't be swallowed by ListView) -->
-            <VisualStateGroup x:Name="CommonStates">
-                <VisualState x:Name="Normal" />
-                <VisualState x:Name="PointerOver">
-                    <VisualState.Setters>
-                        <Setter Target="CloseButton.Visibility" Value="Visible" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
-
+    <!-- ✅ FIX: Explicit events bypass ListView event swallowing and OS title bar interception -->
+    <Grid x:Name="RootGrid" Background="Transparent" IsHitTestVisible="True"
+          PointerEntered="RootGrid_PointerEntered"
+          PointerExited="RootGrid_PointerExited"
+          ContextRequested="RootGrid_ContextRequested">
+        
         <!-- Background & Shoulders -->
         <Rectangle x:Name="TabBackground" Fill="Transparent" Stroke="Transparent" StrokeThickness="1" RadiusX="8" RadiusY="8" Margin="0,4,0,0"/>
         <!-- Bottom Cover: Hides toolbar border when active -->
