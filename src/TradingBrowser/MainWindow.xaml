@@ -17,7 +17,6 @@
     </Window.SystemBackdrop>
 
     <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CompactPaneLength="0" OpenPaneLength="350">
-        
         <SplitView.Pane>
             <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,1,0" Background="{ThemeResource LayerFillColorDefaultBrush}">
                 <Pivot Title="Library" Margin="10" Foreground="{ThemeResource TextFillColorPrimaryBrush}">
@@ -70,18 +69,12 @@
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonRootGrid" Storyboard.TargetProperty="Background">
                                                         <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ControlFillColorSecondaryBrush}"/>
                                                     </ObjectAnimationUsingKeyFrames>
-                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonRootGrid" Storyboard.TargetProperty="BorderBrush">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ControlStrokeColorDefaultBrush}"/>
-                                                    </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
                                             <VisualState x:Name="Pressed">
                                                 <Storyboard>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ButtonRootGrid" Storyboard.TargetProperty="Background">
                                                         <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ControlFillColorTertiaryBrush}"/>
-                                                    </ObjectAnimationUsingKeyFrames>
-                                                    <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Opacity">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="0.8"/>
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
@@ -112,80 +105,71 @@
             <Grid Grid.Row="0" x:Name="AppTitleBar" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" MinHeight="40">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="138"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Grid Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Stretch">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <!-- ✅ FIX: ListView constrained to allow horizontal scrolling -->
+                <ListView x:Name="TabListView" Grid.Column="0"
+                          ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
+                          SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
+                          SelectionChanged="TabListView_SelectionChanged"
+                          SelectionMode="Extended"
+                          CanReorderItems="True" AllowDrop="True"
+                          ScrollViewer.HorizontalScrollMode="Enabled" 
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          ScrollViewer.VerticalScrollMode="Disabled"
+                          Background="Transparent" Padding="4,0"
+                          MinHeight="40" HorizontalAlignment="Left">
+                    
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal" HorizontalAlignment="Left"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
 
-                    <ListView x:Name="TabListView" Grid.Column="0"
-                              automation:AutomationProperties.AutomationId="TabListView"
-                              ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
-                              SelectedItem="{x:Bind ViewModel.SelectedTab, Mode=TwoWay}"
-                              SelectionChanged="TabListView_SelectionChanged"
-                              SelectionMode="Extended"
-                              CanReorderItems="True" AllowDrop="True"
-                              ScrollViewer.HorizontalScrollMode="Enabled" 
-                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                              ScrollViewer.VerticalScrollMode="Disabled"
-                              Background="Transparent" Padding="4,0"
-                              MinHeight="40">
-                        
-                        <ListView.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <ItemsStackPanel Orientation="Horizontal"/>
-                            </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
+                            <!-- ✅ FIX: Hardcoded Edge-style fixed width -->
+                            <Setter Property="Width" Value="240"/>
+                            <Setter Property="MinWidth" Value="240"/>
+                            <Setter Property="MaxWidth" Value="240"/>
+                            <Setter Property="MinHeight" Value="40"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListViewItem">
+                                        <Grid Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                            <ContentPresenter />
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListView.ItemContainerStyle>
 
-                        <ListView.ItemContainerStyle>
-                            <Style TargetType="ListViewItem">
-                                <Setter Property="Padding" Value="0"/>
-                                <Setter Property="Margin" Value="0"/>
-                                <!-- ✅ FIX: Hardcode Edge-style fixed width -->
-                                <Setter Property="Width" Value="240"/>
-                                <Setter Property="MinWidth" Value="240"/>
-                                <Setter Property="MaxWidth" Value="240"/>
-                                <Setter Property="MinHeight" Value="40"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-                                <Setter Property="Background" Value="Transparent"/>
-                                <Setter Property="BorderBrush" Value="Transparent"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListViewItem">
-                                            <Grid Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                                                <ContentPresenter />
-                                            </Grid>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:TabViewModel">
+                            <controls:TabItemPresenter 
+                                Title="{x:Bind Title, Mode=OneWay}"
+                                IsActive="{x:Bind IsActive, Mode=OneWay}"
+                                CloseClicked="Tab_CloseClicked"
+                                CloseTabRequested="Tab_CloseRequested"
+                                CloseOtherTabsRequested="Tab_CloseOthersRequested"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
 
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="vm:TabViewModel">
-                                <!-- ✅ FIX: Event name updated to match ContextRequested -->
-                                <controls:TabItemPresenter 
-                                    Title="{x:Bind Title, Mode=OneWay}"
-                                    IsActive="{x:Bind IsActive, Mode=OneWay}"
-                                    TabContextRequested="Tab_ContextRequested"
-                                    MiddleClicked="Tab_MiddleClicked"
-                                    CloseClicked="Tab_CloseClicked"/>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-
-                    <Button Grid.Column="1" Click="NewTab_Click" 
-                            automation:AutomationProperties.AutomationId="NewTabButton"
-                            Style="{StaticResource EdgeToolbarButtonStyle}"
-                            VerticalAlignment="Center" Margin="4,0,0,0" ToolTipService.ToolTip="New Tab (Ctrl+T)">
-                        <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                    </Button>
-                </Grid>
+                <Button Grid.Column="1" Click="NewTab_Click" 
+                        Style="{StaticResource EdgeToolbarButtonStyle}"
+                        VerticalAlignment="Center" Margin="4,0,8,0" ToolTipService.ToolTip="New Tab (Ctrl+T)">
+                    <FontIcon Glyph="&#xE710;" FontSize="14" Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
+                </Button>
             </Grid>
 
             <!-- ROW 1: Toolbar & Omnibox -->
@@ -234,7 +218,6 @@
                                       Margin="0,0,8,0"/>
                             
                             <TextBox x:Name="Omnibox" Grid.Column="1"
-                                     automation:AutomationProperties.AutomationId="Omnibox"
                                      Text="{x:Bind ViewModel.OmniboxText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                      PlaceholderText="Search Google or type a URL"
                                      PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
