@@ -1,231 +1,106 @@
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.Web.WebView2.Core;
 using TradingBrowser.ViewModels;
+using TradingBrowser.Services;
+using TradingBrowser.Helpers;
+using System;
+using System.IO;
+using Microsoft.UI.Windowing;
 
 namespace TradingBrowser;
 
-public sealed partial class MainWindow
+public sealed partial class MainWindow : Window
 {
-    private TabViewModel? _primaryTab;
-    private TabViewModel? _secondaryTab;
+    public MainViewModel ViewModel { get; } = new();
+    public DownloadService DownloadManager => _downloadService; 
 
-    private void SetupTilingEngine()
-    {
-        ViewModel.TilingLayoutChanged += ApplyTilingLayout;
-        ViewModel.TilingTabsChanged += SyncTiledWebViews;
-    }
-
-    private void SyncTiledWebViews(ICollection<TabViewModel> tabs)
-    {
-        if (tabs.Count >= 2)
-        {
-            _primaryTab = tabs.First();
-            _secondaryTab = tabs.Skip(1).First();
-            
-            if (_isWebViewInitialized)
-            {
-                MainWebView.CoreWebView2.Navigate(_primaryTab.Url);
-                SecondaryWebView.CoreWebView2.Navigate(_secondaryTab.Url);
-            }
-        }
-    }
-
-    private async void ApplyTilingLayout(TilingLayout layout)
-    {
-        TilingHeader.Visibility = layout == TilingLayout.None ? Visibility.Collapsed : Visibility.Visible;
-
-        if (layout == TilingLayout.None)
-        {
-            TilingDivider.Visibility = Visibility.Collapsed;
-            SecondaryWebView.Visibility = Visibility.Collapsed;
-            ResetGridToSingle();
-            return;
-        }
-
-        SecondaryWebView.Visibility = Visibility.Visible;
-        TilingDivider.Visibility = Visibility.Visible;
-
-        await SecondaryWebView.EnsureCoreWebView2Async();
-        SecondaryWebView.CoreWebView2.DocumentTitleChanged += (s, e) => UpdateTabTitle(_secondaryTab, SecondaryWebView);
-        SecondaryWebView.CoreWebView2.NavigationStarting += (s, e) => UpdateTabUrl(_secondaryTab, e.Uri);
-
-        MainWebView.CoreWebView2.DocumentTitleChanged += (s, e) => UpdateTabTitle(_primaryTab, MainWebView);
-        MainWebView.CoreWebView2.NavigationStarting += (s, e) => UpdateTabUrl(_primaryTab, e.Uri);
-
-        switch (layout)
-        {
-            case TilingLayout.Horizontal:
-                ConfigureHorizontalLayout();
-                break;
-            case TilingLayout.Vertical:
-                ConfigureVerticalLayout();
-                break;
-            case TilingLayout.Grid:
-                ConfigureGridLayout();
-                break;
-        }
-    }
-
-    private void ConfigureHorizontalLayout()
-    {
-        ResetGridToDualColumn();
-        Grid.SetRow(MainWebView, 0); Grid.SetColumn(MainWebView, 0);
-        Grid.SetRow(SecondaryWebView, 0); Grid.SetColumn(SecondaryWebView, 1);
-        Grid.SetRow(TilingDivider, 0); Grid.SetColumn(TilingDivider, 1);
-        TilingDivider.Height = double.NaN; TilingDivider.Width = 4;
-    }
-
-    private void ConfigureVerticalLayout()
-    {
-        ResetGridToDualRow();
-        Grid.SetRow(MainWebView, 0); Grid.SetColumn(MainWebView, 0);
-        Grid.SetRow(SecondaryWebView, 1); Grid.SetColumn(SecondaryWebView, 0);
-        Grid.SetRow(TilingDivider, 1); Grid.SetColumn(TilingDivider, 0);
-        TilingDivider.Width = double.NaN; TilingDivider.Height = 4;
-    }
-
-    private void ConfigureGridLayout()
-    {
-        TilingHost.RowDefinitions.Clear();
-        TilingHost.ColumnDefinitions.Clear();
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-        Grid.SetRow(MainWebView, 0); Grid.SetColumn(MainWebView, 0);
-        Grid.SetRow(SecondaryWebView, 1); Grid.SetColumn(SecondaryWebView, 1);
-        TilingDivider.Visibility = Visibility.Collapsed;
-    }
-
-    private void ResetGridToSingle()
-    {
-        TilingHost.RowDefinitions.Clear();
-        TilingHost.ColumnDefinitions.Clear();
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        Grid.SetRow(MainWebView, 0); Grid.SetColumn(MainWebView, 0);
-        SecondaryWebView.Visibility = Visibility.Collapsed;
-    }
-
-    private void ResetGridToDualColumn()
-    {
-        TilingHost.RowDefinitions.Clear();
-        TilingHost.ColumnDefinitions.Clear();
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-    }
-
-    private void ResetGridToDualRow()
-    {
-        TilingHost.RowDefinitions.Clear();
-        TilingHost.ColumnDefinitions.Clear();
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-    }
-
-    private void TilingDivider_DragDelta(object sender, DragDeltaEventArgs e)
-    {
-        if (ViewModel.CurrentTilingLayout == TilingLayout.Horizontal)
-        {
-            double newCol0Width = TilingHost.ColumnDefinitions[0].ActualWidth + e.HorizontalChange;
-            double totalWidth = TilingHost.ActualWidth;
-            if (newCol0Width > 150 && (totalWidth - newCol0Width) > 150)
-            {
-                TilingHost.ColumnDefinitions[0].Width = new GridLength(newCol0Width, GridUnitType.Pixel);
-                TilingHost.ColumnDefinitions[1].Width = new GridLength(totalWidth - newCol0Width, GridUnitType.Pixel);
-            }
-        }
-        else if (ViewModel.CurrentTilingLayout == TilingLayout.Vertical)
-        {
-            double newRow0Height = TilingHost.RowDefinitions[0].ActualHeight + e.VerticalChange;
-            double totalHeight = TilingHost.ActualHeight;
-            if (newRow0Height > 150 && (totalHeight - newRow0Height) > 150)
-            {
-                TilingHost.RowDefinitions[0].Height = new GridLength(newRow0Height, GridUnitType.Pixel);
-                TilingHost.RowDefinitions[1].Height = new GridLength(totalHeight - newRow0Height, GridUnitType.Pixel);
-            }
-        }
-    }
-
-    private void UpdateTabTitle(TabViewModel? tab, WebView2 wv) 
-    { 
-        if (tab != null) tab.Title = wv.CoreWebView2.DocumentTitle; 
-    }
+    // These are private but accessible across all partial classes (Tabs, Panes, Navigation, WebView)
+    private bool _isWebViewInitialized;
+    private bool _isSplitPaneActive;
     
-    private void UpdateTabUrl(TabViewModel? tab, string url) 
-    { 
-        if (tab != null) tab.Url = url; 
-    }
+    private readonly SessionService _sessionService;
+    private readonly ShortcutService _shortcutService;
+    private readonly HistoryBookmarkService _hbService;
+    private readonly DownloadService _downloadService;
+    private WebViewNavigationService? _navService; 
+    
+    private readonly string _shortcutsJs;
+    private readonly string _tradingViewJs;
 
-    private void SwitchToHorizontal_Click(object sender, RoutedEventArgs e) => ViewModel.SwitchTilingLayoutCommand.Execute(TilingLayout.Horizontal);
-    private void SwitchToVertical_Click(object sender, RoutedEventArgs e) => ViewModel.SwitchTilingLayoutCommand.Execute(TilingLayout.Vertical);
-    private void SwitchToGrid_Click(object sender, RoutedEventArgs e) => ViewModel.SwitchTilingLayoutCommand.Execute(TilingLayout.Grid);
-    private void Untile_Click(object sender, RoutedEventArgs e) => ViewModel.UntileTabsCommand.Execute(null);
-
-    private void TileTabs(TabViewModel primary, TabViewModel secondary)
+    public MainWindow()
     {
-        ViewModel.SelectedTab = primary;
-        _secondaryTab = secondary;
-        SplitPane(secondary.Url);
-    }
-
-    private async void SplitPane(string? url = null)
-    {
-        if (_isSplitPaneActive) return;
-        _isSplitPaneActive = true;
-
-        TilingHost.RowDefinitions.Clear();
-        TilingHost.ColumnDefinitions.Clear();
-        TilingHost.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        TilingHost.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-        Grid.SetRow(MainWebView, 0); Grid.SetColumn(MainWebView, 0);
-        Grid.SetRow(SecondaryWebView, 0); Grid.SetColumn(SecondaryWebView, 1);
-        Grid.SetRow(TilingDivider, 0); Grid.SetColumn(TilingDivider, 1);
+        this.InitializeComponent();
+        RootGrid.DataContext = this; 
         
-        TilingDivider.Visibility = Visibility.Visible;
-        SecondaryWebView.Visibility = Visibility.Visible;
-        TilingHeader.Visibility = Visibility.Visible;
+        if (this.Content is FrameworkElement content) 
+            content.RequestedTheme = ElementTheme.Dark;
 
-        try
-        {
-            await SecondaryWebView.EnsureCoreWebView2Async();
-            SecondaryWebView.CoreWebView2.Navigate(url ?? "https://www.tradingview.com");
-        }
-        catch { /* Silently handle WebView2 init failure */ }
+        _sessionService = new SessionService(App.Db!);
+        _hbService = new HistoryBookmarkService(App.Db!);
+        _downloadService = new DownloadService(App.Db!);
+        
+        _shortcutService = new ShortcutService(
+            ViewModel, 
+            () => _isWebViewInitialized ? MainWebView.CoreWebView2 : null
+        );
+
+        _shortcutService.BookmarkRequested += () => {
+            if (ViewModel.SelectedTab != null)
+                ToggleBookmark(ViewModel.SelectedTab.Url, ViewModel.SelectedTab.Title);
+        };
+
+        ViewModel.PropertyChanged += (s, e) => {
+            if (e.PropertyName == nameof(MainViewModel.SelectedTab) || e.PropertyName == nameof(MainViewModel.OmniboxText))
+                UpdateOmniboxIcon();
+        };
+
+        string shortcutsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "shortcuts.js");
+        _shortcutsJs = File.Exists(shortcutsPath) ? File.ReadAllText(shortcutsPath) : "";
+
+        string tvJsPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "tradingview-tweaks.js");
+        _tradingViewJs = File.Exists(tvJsPath) ? File.ReadAllText(tvJsPath) : "";
+
+        SetupTitleBar();
+        SetupEventHooks();
+        SetupOmniboxAnimations(); 
+        
+        // PHASE 1: Live Theme Hook (Lives in Navigation.cs)
+        RootGrid.ActualThemeChanged += RootGrid_ActualThemeChanged;
+
+        // SILKY MOTION: Setup Adaptive Tab Scaling (Lives in Tabs.cs)
+        SetupAdaptiveTabScaling();
+
+        // VIVALDI TILING: Setup Tiling Engine (Lives in Panes.cs)
+        SetupTilingEngine();
+
+        _ = InitializeWebViewAsync();
     }
 
-    private void CollapsePane()
+    private void SetupTitleBar()
     {
-        if (!_isSplitPaneActive) return;
-        _isSplitPaneActive = false;
-        _secondaryTab = null;
-
-        ResetGridToSingle();
-        ViewModel.UntileTabsCommand.Execute(null);
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
+        var appWindow = this.AppWindow;
+        appWindow.TitleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        appWindow.TitleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        appWindow.TitleBar.ButtonForegroundColor = Microsoft.UI.Colors.White;
     }
 
-    private void CollapsePane_Click(object sender, RoutedEventArgs e) => CollapsePane();
-    
-    private void SplitPane_Click(object sender, RoutedEventArgs e) 
-    { 
-        if (TabListView.SelectedItems.Count >= 2)
-        {
-            var selected = TabListView.SelectedItems.Cast<TabViewModel>().ToList();
-            ViewModel.TileSelection(selected, TilingLayout.Horizontal);
-            TileTabs(selected[0], selected[1]);
-        }
-        else
-        {
-            SplitPane(); 
-        }
+    private void SetupEventHooks()
+    {
+        RootGrid.PointerPressed += (s, e) => _shortcutService.HandlePointerPressed(e);
+        RootGrid.KeyDown += (s, e) => _shortcutService.HandleUiKeyDown(e);
+        
+        ViewModel.NavigationRequested += url => { if (_isWebViewInitialized) MainWebView.CoreWebView2.Navigate(url); };
+        ViewModel.FocusOmniboxRequested += () => { Omnibox.Focus(FocusState.Programmatic); Omnibox.SelectAll(); };
+        ViewModel.ToggleFullscreenRequested += ToggleFullscreen;
+        ViewModel.OpenDevToolsRequested += () => { if (_isWebViewInitialized) MainWebView.CoreWebView2.OpenDevToolsWindow(); };
+
+        this.AppWindow.Closing += (s, e) => {
+            if (ViewModel.SelectedTab != null)
+                _sessionService.SaveSession(ViewModel.Tabs, ViewModel.SelectedTab.Id.ToString());
+        };
     }
 }
