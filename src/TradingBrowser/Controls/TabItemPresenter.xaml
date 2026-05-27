@@ -8,9 +8,10 @@
     Height="40" MinWidth="72" MaxWidth="240">
 
     <Grid x:Name="RootGrid" Background="Transparent" Margin="0,4,0,-1" 
+          RightTapped="RootGrid_RightTapped"
           PointerEntered="RootGrid_PointerEntered"
           PointerExited="RootGrid_PointerExited"
-          RightTapped="RootGrid_RightTapped">
+          IsHitTestVisible="True">
         
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="ActiveStates">
@@ -21,12 +22,16 @@
                         <Setter Target="TabBackground.Stroke" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
                         <Setter Target="TabBackground.CornerRadius" Value="8,8,0,0"/>
                         <Setter Target="BottomCover.Visibility" Value="Visible"/>
+                        <Setter Target="CloseButton.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
+        <!-- Background & Shoulders -->
         <Rectangle x:Name="TabBackground" Fill="Transparent" Stroke="Transparent" StrokeThickness="1" RadiusX="8" RadiusY="8"/>
+        
+        <!-- Bottom Cover: Hides toolbar border when active -->
         <Rectangle x:Name="BottomCover" Fill="{ThemeResource LayerFillColorDefaultBrush}" Height="2" VerticalAlignment="Bottom" Visibility="Collapsed"/>
 
         <Grid Padding="10,0" ColumnSpacing="8">
@@ -40,6 +45,7 @@
                        Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                        TextTrimming="CharacterEllipsis"/>
 
+            <!-- Close Button: Hidden by default, shown on hover or when active -->
             <Button Grid.Column="1" x:Name="CloseButton" Click="CloseButton_Click" 
                     Width="20" Height="20" MinWidth="20" MinHeight="20" 
                     Padding="0" CornerRadius="4" Background="Transparent" BorderThickness="0"
