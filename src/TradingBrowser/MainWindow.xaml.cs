@@ -24,6 +24,9 @@ public sealed partial class MainWindow : Window
     private readonly HistoryBookmarkService _hbService;
     private readonly DownloadService _downloadService;
     
+    // FIX: Restored missing field required by MainWindow.WebView.cs
+    private WebViewNavigationService? _navService; 
+    
     private readonly string _shortcutsJs;
     private readonly string _tradingViewJs;
 
