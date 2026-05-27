@@ -16,6 +16,10 @@ public partial class TabViewModel : ObservableObject
     [ObservableProperty]
     public partial string Url { get; set; } = string.Empty;
 
+    // ✅ ADDED: Required for active tab visual state binding in TabItemPresenter
+    [ObservableProperty]
+    public partial bool IsActive { get; set; }
+
     [ObservableProperty]
     public partial bool IsPinned { get; set; }
 
@@ -27,4 +31,13 @@ public partial class TabViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool CanGoForward { get; set; }
+
+    public TabViewModel() { }
+
+    public TabViewModel(string url, string title)
+    {
+        Id = Guid.NewGuid();
+        Url = url;
+        Title = title;
+    }
 }
