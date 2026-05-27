@@ -18,14 +18,12 @@
 
     <SplitView x:Name="MainSplitView" DisplayMode="Overlay" PaneBackground="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}" CompactPaneLength="0" OpenPaneLength="350">
         
-        <!-- ✅ FIX: Sidebar restored with correct ListView names -->
         <SplitView.Pane>
             <Border BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,1,0" Background="{ThemeResource LayerFillColorDefaultBrush}">
                 <Pivot Title="Library" Margin="10" Foreground="{ThemeResource TextFillColorPrimaryBrush}">
                     <PivotItem Header="Bookmarks">
                         <ListView x:Name="BookmarkListView" SelectionMode="Single" SelectionChanged="BookmarkListView_SelectionChanged">
                             <ListView.ItemTemplate>
-                                <!-- ✅ FIX: Removed x:DataType to prevent WMC9999 crashes -->
                                 <DataTemplate>
                                     <StackPanel Padding="5">
                                         <TextBlock Text="{Binding Title}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
@@ -38,7 +36,6 @@
                     <PivotItem Header="History">
                         <ListView x:Name="HistoryListView" SelectionMode="Single" SelectionChanged="HistoryListView_SelectionChanged">
                             <ListView.ItemTemplate>
-                                <!-- ✅ FIX: Removed x:DataType to prevent WMC9999 crashes -->
                                 <DataTemplate>
                                     <StackPanel Padding="5">
                                         <TextBlock Text="{Binding Title}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
@@ -124,6 +121,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- ✅ FIX: Horizontal scrolling enabled for Edge-style tabs -->
                     <ListView x:Name="TabListView" Grid.Column="0"
                               automation:AutomationProperties.AutomationId="TabListView"
                               ItemsSource="{x:Bind ViewModel.Tabs, Mode=OneWay}" 
@@ -131,8 +129,8 @@
                               SelectionChanged="TabListView_SelectionChanged"
                               SelectionMode="Extended"
                               CanReorderItems="True" AllowDrop="True"
-                              ScrollViewer.HorizontalScrollMode="Auto" 
-                              ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                              ScrollViewer.HorizontalScrollMode="Enabled" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Auto"
                               ScrollViewer.VerticalScrollMode="Disabled"
                               Background="Transparent" Padding="4,0"
                               MinHeight="40">
@@ -214,10 +212,10 @@
                         </Button>
                     </StackPanel>
 
+                    <!-- ✅ FIX: Omnibox alignment and padding -->
                     <Border x:Name="OmniboxBorder" Grid.Column="2" 
                             Background="{ThemeResource ControlFillColorDefaultBrush}" 
                             CornerRadius="6" 
-                            Height="32" 
                             VerticalAlignment="Center" 
                             BorderThickness="1" 
                             BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}">
@@ -245,7 +243,7 @@
                                      BorderThickness="0"
                                      VerticalAlignment="Center" 
                                      VerticalContentAlignment="Center" 
-                                     Padding="0,2,0,0" 
+                                     Padding="0,5,0,0" 
                                      FontSize="14"
                                      FontFamily="Segoe UI Variable"/>
                         </Grid>
@@ -276,7 +274,6 @@
                                             <ListView Grid.Row="1" ItemsSource="{x:Bind DownloadManager.ActiveDownloads, Mode=OneWay}">
                                                 <ListView.ItemTemplate>
                                                     <DataTemplate x:DataType="services:ActiveDownload">
-                                                        <!-- ✅ FIX: Expanded Grid definitions to prevent WMC9999 -->
                                                         <Grid Padding="8" RowSpacing="6" Margin="0,4">
                                                             <Grid.RowDefinitions>
                                                                 <RowDefinition Height="Auto"/>
