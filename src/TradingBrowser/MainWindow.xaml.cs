@@ -69,13 +69,13 @@ public sealed partial class MainWindow : Window
         SetupAdaptiveTabScaling();
         SetupTilingEngine();
 
-        // ✅ FIX: Restore session BEFORE initializing WebView
+        // ✅ Restore session BEFORE initializing WebView
         RestoreLastSession();
         
         _ = InitializeWebViewAsync();
     }
 
-    // ✅ NEW METHOD: Restore last session
+    // ✅ Session Restore Method
     private void RestoreLastSession()
     {
         try
@@ -127,4 +127,14 @@ public sealed partial class MainWindow : Window
                 _sessionService.SaveSession(ViewModel.Tabs, ViewModel.SelectedTab.Id.ToString());
         };
     }
+
+    // NOTE: All other methods (Back_Click, Forward_Click, Omnibox_KeyDown, UpdateOmniboxIcon, 
+    // SetupOmniboxAnimations, RootGrid_ActualThemeChanged, ToggleFullscreen, Settings_Click, 
+    // Home_Click, Reload_Click, InitializeWebViewAsync, SetupAdaptiveTabScaling, SetupTilingEngine, 
+    // ToggleBookmark, etc.) exist in your other partial files:
+    // - MainWindow.Panes.cs
+    // - MainWindow.Tabs.cs  
+    // - MainWindow.Tiling.cs
+    // - MainWindow.WebView.cs
+    // DO NOT duplicate them here to avoid CS0111 errors.
 }
