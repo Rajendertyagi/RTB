@@ -1,10 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives; // FIX: Added for FlyoutShowOptions
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TradingBrowser.ViewModels;
 using TradingBrowser.Controls;
+using TradingBrowser.Services;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -42,6 +43,8 @@ public sealed partial class MainWindow
 
     private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        LoggingService.Info($"TabListView_SelectionChanged fired. WebViewInitialized: {_isWebViewInitialized}, SelectedTab: {ViewModel.SelectedTab?.Title ?? "null"}");
+
         foreach (var item in TabListView.Items)
         {
             if (TabListView.ContainerFromItem(item) is ListViewItem container && container.Content is TabViewModel vm)
@@ -53,13 +56,18 @@ public sealed partial class MainWindow
             }
         }
 
-        if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
+        if (!_isWebViewInitialized || ViewModel.SelectedTab == null) 
+        {
+            LoggingService.Warning("TabListView_SelectionChanged ABORTED: WebView not initialized or no tab selected.");
+            return; 
+        }
         if (TabListView.SelectedItems.Count > 1) return;
 
         if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab) oldTab.Url = MainWebView.CoreWebView2.Source;
         
         var newTab = ViewModel.SelectedTab;
         ViewModel.OmniboxText = newTab.Url;
+        
         if (MainWebView.CoreWebView2.Source != newTab.Url) MainWebView.CoreWebView2.Navigate(newTab.Url);
         UpdateOmniboxIcon();
         
@@ -117,5 +125,9 @@ public sealed partial class MainWindow
         if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); 
     }
 
-    private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
+    private void NewTab_Click(object sender, RoutedEventArgs e) 
+    { 
+        LoggingService.Info("NewTab_Click: Button pressed. Executing AddTabCommand...");
+        ViewModel.AddTabCommand.Execute(null); 
+    }
 }
