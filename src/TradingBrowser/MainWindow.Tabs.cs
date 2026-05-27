@@ -27,20 +27,14 @@ public sealed partial class MainWindow
 
     private void RecalculateTabWidths()
     {
-        if (TabListView.ActualWidth <= 0 || ViewModel.Tabs.Count == 0) return;
-
-        double availableWidth = TabListView.ActualWidth - 44;
-        int tabCount = ViewModel.Tabs.Count;
-        double targetWidth = availableWidth / tabCount;
-        double finalWidth = System.Math.Max(72, System.Math.Min(240, targetWidth));
-
+        // ✅ FIX: Let tabs stay their natural 240px width and scroll horizontally
         foreach (var item in TabListView.Items)
         {
             if (TabListView.ContainerFromItem(item) is ListViewItem container)
             {
-                container.Width = finalWidth;
-                container.MinWidth = 72;
-                container.MaxWidth = 240;
+                container.Width = double.NaN; // Auto width based on child (240px)
+                container.MinWidth = 0;
+                container.MaxWidth = double.PositiveInfinity;
             }
         }
     }
@@ -85,7 +79,6 @@ public sealed partial class MainWindow
         BookmarkIcon.Glyph = isBookmarked ? "\uE735" : "\uE734";
     }
 
-    // ✅ FIX: Signature updated to match RightTappedRoutedEventArgs from TabItemPresenter
     private void Tab_ContextRequested(object sender, RightTappedRoutedEventArgs e)
     {
         LoggingService.Info("[Tabs] Tab_ContextRequested fired (right-click on tab)");
@@ -126,7 +119,6 @@ public sealed partial class MainWindow
         menu.SystemBackdrop = new DesktopAcrylicBackdrop();
         FrameworkElement targetElement = tabPresenter ?? (FrameworkElement)RootGrid;
 
-        // ✅ FIX: RightTappedRoutedEventArgs uses GetPosition instead of TryGetPosition
         Point point = e.GetPosition(targetElement);
         menu.ShowAt(targetElement, new FlyoutShowOptions { Position = point });
 
