@@ -1,115 +1,130 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using TradingBrowser.ViewModels;
+using TradingBrowser.Controls;
 using System.Linq;
-using TradingBrowser.Helpers;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using Windows.Foundation;
 
-namespace TradingBrowser.ViewModels;
+namespace TradingBrowser;
 
-public enum TilingLayout { None, Horizontal, Vertical, Grid }
-
-public partial class MainViewModel : ObservableObject
+public sealed partial class MainWindow
 {
-    [ObservableProperty] private TabViewModel? _selectedTab;
-    [ObservableProperty] private string _omniboxText = string.Empty;
-    [ObservableProperty] private bool _canGoBack;
-    [ObservableProperty] private bool _canGoForward;
-
-    // ==========================================
-    // TILING STATE
-    // ==========================================
-    [ObservableProperty] private TilingLayout _currentTilingLayout = TilingLayout.None;
-    public ObservableCollection<TabViewModel> TiledTabs { get; } = [];
-
-    public event Action<TilingLayout>? TilingLayoutChanged;
-    public event Action<ICollection<TabViewModel>>? TilingTabsChanged;
-    // ==========================================
-
-    public ObservableCollection<TabViewModel> Tabs { get; } = [];
-    private readonly Stack<string> _closedTabs = new();
-    private string _searchEngine = "Google";
-
-    public event Action<string>? NavigationRequested;
-    public event Action? FocusOmniboxRequested;
-    public event Action? ToggleFullscreenRequested;
-    public event Action? OpenDevToolsRequested;
-
-    public MainViewModel() { }
-
-    public void InitializeSession(List<TabViewModel> restoredTabs, string? activeTabId)
+    private void TabListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        Tabs.Clear();
-        if (restoredTabs.Any())
+        foreach (var item in TabListView.Items)
         {
-            foreach (var tab in restoredTabs) Tabs.Add(tab);
-            SelectedTab = Tabs.FirstOrDefault(t => t.Id.ToString() == activeTabId) ?? Tabs.First();
+            if (TabListView.ContainerFromItem(item) is ListViewItem container && container.Content is TabViewModel vm)
+            {
+                if (container.ContentTemplateRoot is TabItemPresenter presenter)
+                {
+                    presenter.IsActive = (vm == ViewModel.SelectedTab);
+                }
+            }
+        }
+
+        if (!_isWebViewInitialized || ViewModel.SelectedTab == null) return;
+        if (TabListView.SelectedItems.Count > 1) return;
+
+        if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is TabViewModel oldTab) oldTab.Url = MainWebView.CoreWebView2.Source;
+        
+        var newTab = ViewModel.SelectedTab;
+        ViewModel.OmniboxText = newTab.Url;
+        if (MainWebView.CoreWebView2.Source != newTab.Url) MainWebView.CoreWebView2.Navigate(newTab.Url);
+        UpdateOmniboxIcon();
+        
+        bool isBookmarked = _hbService.IsBookmarked(newTab.Url);
+        BookmarkIcon.Glyph = isBookmarked ? "\uE735" : "\uE734";
+    }
+
+    private void Tab_ContextRequested(object sender, ContextRequestedEventArgs e)
+    {
+        var selectedTabs = TabListView.SelectedItems.Cast<TabViewModel>().ToList();
+        TabItemPresenter? tabPresenter = sender as TabItemPresenter;
+        
+        if (tabPresenter?.DataContext is TabViewModel tabVM)
+        {
+            if (!selectedTabs.Contains(tabVM)) selectedTabs = new List<TabViewModel> { tabVM };
+        }
+
+        var menu = new MenuFlyout();
+        var closeItem = new MenuFlyoutItem { Text = "Close tab" };
+        closeItem.Click += (s, args) => ViewModel.CloseTabCommand.Execute(selectedTabs.LastOrDefault());
+        menu.Items.Add(closeItem);
+
+        var closeOtherItem = new MenuFlyoutItem { Text = "Close other tabs" };
+        closeOtherItem.Click += (s, args) => 
+        {
+            foreach (var t in ViewModel.Tabs.Where(t => !selectedTabs.Contains(t))) ViewModel.CloseTabCommand.Execute(t);
+        };
+        menu.Items.Add(closeOtherItem);
+
+        if (selectedTabs.Count >= 2)
+        {
+            var tileItem = new MenuFlyoutItem { Text = $"Tile {selectedTabs.Count} Tabs" };
+            tileItem.Click += (s, args) => 
+            {
+                ViewModel.TileSelection(selectedTabs, TilingLayout.Horizontal);
+                TileTabs(selectedTabs[0], selectedTabs[1]);
+            };
+            menu.Items.Add(tileItem);
         }
         else
         {
-            AddTab();
+            var splitItem = new MenuFlyoutItem { Text = "Split Right" };
+            splitItem.Click += (s, args) => SplitPane();
+            menu.Items.Add(splitItem);
         }
+
+        menu.SystemBackdrop = new DesktopAcrylicBackdrop();
+        FrameworkElement targetElement = tabPresenter ?? (FrameworkElement)RootGrid;
+        if (e.TryGetPosition(targetElement, out Point point)) menu.ShowAt(targetElement, new FlyoutShowOptions { Position = point });
+        else menu.ShowAt(targetElement);
+        e.Handled = true;
     }
 
-    [RelayCommand] private void AddTab() { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void ReopenClosedTab() { /* ... existing logic ... */ }
-    [RelayCommand] private void DuplicateTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void PinTab(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseOtherTabs(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void CloseTabsToRight(TabViewModel? tab) { /* ... existing logic ... */ }
-    [RelayCommand] private void NavigateOmnibox() { /* ... existing logic ... */ }
-    [RelayCommand] private void GoHome() { /* ... existing logic ... */ }
-    [RelayCommand] private void NavigateToUrl(string url) { /* ... existing logic ... */ }
-
-    public void UpdateNavigationState(bool canGoBack, bool canGoForward)
-    {
-        CanGoBack = canGoBack;
-        CanGoForward = canGoForward;
+    private void Tab_MiddleClicked(object sender, PointerRoutedEventArgs e) 
+    { 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); 
+    }
+    
+    private void Tab_CloseClicked(object sender, RoutedEventArgs e) 
+    { 
+        if (sender is FrameworkElement el && el.DataContext is TabViewModel tab) ViewModel.CloseTabCommand.Execute(tab); 
     }
 
-    public void NextTab() { /* ... existing logic ... */ }
-    public void PreviousTab() { /* ... existing logic ... */ }
-    public void SwitchToTab(int index) { /* ... existing logic ... */ }
-    public void TriggerFocusOmnibox() => FocusOmniboxRequested?.Invoke();
-    public void TriggerToggleFullscreen() => ToggleFullscreenRequested?.Invoke();
-    public void TriggerOpenDevTools() => OpenDevToolsRequested?.Invoke();
-
-    partial void OnSelectedTabChanging(TabViewModel? value) { if (value != null) OmniboxText = value.Url; }
+    private void NewTab_Click(object sender, RoutedEventArgs e) { ViewModel.AddTabCommand.Execute(null); }
 
     // ==========================================
-    // TILING ENGINE
+    // ADAPTIVE TAB WIDTH SCALING
     // ==========================================
-    public void TileSelection(IEnumerable<TabViewModel> selection, TilingLayout layout)
+    public void SetupAdaptiveTabScaling()
     {
-        var tabs = selection.Take(2).ToList(); // Vivaldi supports 2+; we cap at 2 for stable WebView2 perf
-        if (tabs.Count < 2) return;
-
-        TiledTabs.Clear();
-        foreach (var t in tabs) TiledTabs.Add(t);
-        
-        CurrentTilingLayout = layout;
-        TilingTabsChanged?.Invoke(TiledTabs);
-        TilingLayoutChanged?.Invoke(layout);
+        TabListView.SizeChanged += (_, _) => RecalculateTabWidths();
+        ViewModel.Tabs.CollectionChanged += (_, _) => RecalculateTabWidths();
     }
 
-    [RelayCommand]
-    private void UntileTabs()
+    private void RecalculateTabWidths()
     {
-        TiledTabs.Clear();
-        CurrentTilingLayout = TilingLayout.None;
-        TilingTabsChanged?.Invoke(TiledTabs);
-        TilingLayoutChanged?.Invoke(TilingLayout.None);
-    }
+        if (TabListView.ActualWidth <= 0 || ViewModel.Tabs.Count == 0) return;
 
-    [RelayCommand]
-    private void SwitchTilingLayout(TilingLayout layout)
-    {
-        if (TiledTabs.Count >= 2 && layout != CurrentTilingLayout)
+        double availableWidth = TabListView.ActualWidth - 44; // 44px buffer for New Tab button + padding
+        int tabCount = ViewModel.Tabs.Count;
+        double targetWidth = availableWidth / tabCount;
+        double finalWidth = Math.Max(72, Math.Min(240, targetWidth)); // Clamp 72px-240px
+
+        foreach (var item in TabListView.Items)
         {
-            CurrentTilingLayout = layout;
-            TilingLayoutChanged?.Invoke(layout);
+            if (TabListView.ContainerFromItem(item) is ListViewItem container)
+            {
+                container.Width = finalWidth;
+                container.MinWidth = 72;
+                container.MaxWidth = 240;
+            }
         }
     }
 }
